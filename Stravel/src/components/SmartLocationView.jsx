@@ -103,19 +103,6 @@ function SmartLocationView({ group }) {
           <span className="h-2.5 w-2.5 rounded-full bg-rose-600" /> 集合地點
         </span>
       </div>
-
-      <div className="grid gap-3 rounded-2xl bg-slate-50 p-4 text-sm sm:grid-cols-2">
-        <div>
-          <p className="text-slate-500">集合地點</p>
-          <p className="mt-0.5 font-semibold text-slate-900">{group.meetingPoint}</p>
-        </div>
-        <div>
-          <p className="text-slate-500">導遊聯絡方式</p>
-          <p className="mt-0.5 font-semibold text-slate-900">
-            {group.guideName} / {group.guidePhone}
-          </p>
-        </div>
-      </div>
     </div>
   )
 }

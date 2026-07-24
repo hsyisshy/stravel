@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import {
   formatDate,
   formatDateTime,
@@ -91,6 +91,7 @@ function HeaderLeft({ tab, groupName }) {
 
 function GroupPublicPage() {
   const { groupId } = useParams()
+  const navigate = useNavigate()
   const [group, setGroup] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -115,7 +116,13 @@ function GroupPublicPage() {
     load()
   }, [groupId, refreshKey])
 
-  if (loading) {
+  useEffect(() => {
+    if (!loading && group && !getStoredParticipantId(groupId)) {
+      navigate(`/group/${groupId}/join`, { replace: true })
+    }
+  }, [loading, group, groupId, navigate])
+
+  if (loading || (group && !getStoredParticipantId(groupId))) {
     return (
       <div className="mx-auto w-full max-w-xl rounded-2xl border border-slate-200 bg-white p-6 text-slate-600">
         讀取中...
@@ -146,24 +153,7 @@ function GroupPublicPage() {
 
   return (
     <div className="mx-auto w-full max-w-xl space-y-4">
-      {!participantId && (
-        <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h1 className="text-2xl font-black tracking-tight text-slate-900">{group.name}</h1>
-          <p className="mt-2 text-sm text-slate-500">
-            行程日期: {formatDate(group.departureDate)} - {formatDate(group.returnDate)}
-          </p>
-          <div className="mt-5">
-            <Link
-              to={`/group/${group.id}/join`}
-              className="rounded-xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-cyan-500"
-            >
-              尚未加入？點我填資料
-            </Link>
-          </div>
-        </section>
-      )}
-
-      <section className="overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-b from-slate-500 via-slate-400 to-amber-100/70 p-4 shadow-sm">
+      <section className="overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-b from-[#6d7f78] via-[#96a199] to-amber-100/70 p-4 shadow-sm">
         <div className="relative flex items-center justify-between pb-4">
           <HeaderLeft tab={activeTab} groupName={group.name} />
 
@@ -231,6 +221,22 @@ function GroupPublicPage() {
                         <p className="mt-0.5 text-sm text-slate-600">地點: {item.location}</p>
                       </article>
                     ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-wide text-slate-400">團體資訊</h3>
+                  <div className="mt-2 grid gap-3 rounded-xl bg-slate-50 p-3 text-sm sm:grid-cols-2">
+                    <div>
+                      <p className="text-slate-500">集合地點</p>
+                      <p className="mt-0.5 font-semibold text-slate-900">{group.meetingPoint}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-500">導遊聯絡方式</p>
+                      <p className="mt-0.5 font-semibold text-slate-900">
+                        {group.guideName} / {group.guidePhone}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
