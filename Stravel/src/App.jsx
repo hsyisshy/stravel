@@ -1,4 +1,4 @@
-import { Link, NavLink, Route, Routes } from 'react-router-dom'
+import { Link, NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import HomePage from './pages/HomePage'
 import AdminGroupsPage from './pages/AdminGroupsPage'
 import NewGroupPage from './pages/NewGroupPage'
@@ -6,7 +6,15 @@ import AdminGroupDetailPage from './pages/AdminGroupDetailPage'
 import GroupJoinPage from './pages/GroupJoinPage'
 import GroupPublicPage from './pages/GroupPublicPage'
 
-function Shell({ children }) {
+function Shell({ bare, children }) {
+  if (bare) {
+    return (
+      <div className="min-h-screen bg-slate-50 text-slate-800">
+        <main className="mx-auto w-full max-w-7xl px-6 py-8">{children}</main>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800">
       <div className="relative overflow-hidden border-b border-slate-200 bg-white/80 backdrop-blur-xl">
@@ -49,8 +57,11 @@ function Shell({ children }) {
 }
 
 function App() {
+  const location = useLocation()
+  const isTravelerRoute = location.pathname.startsWith('/group/')
+
   return (
-    <Shell>
+    <Shell bare={isTravelerRoute}>
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/admin/groups" element={<AdminGroupsPage />} />

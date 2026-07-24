@@ -12,12 +12,14 @@ import {
   getGroupById,
   getItineraryFeed,
   getPhotoFeed,
+  removeTraveler,
   setAttendanceStatus,
   updateGroupLocation,
 } from '../lib/storage'
 import LocationPicker from '../components/LocationPicker'
 
 const tabs = [
+  { key: 'travelers', label: '團員名單' },
   { key: 'announcements', label: '公告區' },
   { key: 'itinerary', label: '行程一覽表' },
   { key: 'photos', label: '照片區' },
@@ -30,7 +32,7 @@ function AdminGroupDetailPage() {
   const [group, setGroup] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [activeTab, setActiveTab] = useState('announcements')
+  const [activeTab, setActiveTab] = useState('travelers')
   const [refreshKey, setRefreshKey] = useState(0)
   const [announcementForm, setAnnouncementForm] = useState({
     title: '',
@@ -50,6 +52,7 @@ function AdminGroupDetailPage() {
   const [savingError, setSavingError] = useState('')
   const [locationForm, setLocationForm] = useState({ lat: null, lng: null, radiusM: 300 })
   const [savingLocation, setSavingLocation] = useState(false)
+  const [removingTravelerId, setRemovingTravelerId] = useState(null)
 
   useEffect(() => {
     async function loadGroup() {
@@ -200,6 +203,22 @@ function AdminGroupDetailPage() {
       })
   }
 
+  async function handleRemoveTraveler(traveler) {
+    if (!canEdit) return
+    if (!window.confirm(`確定要將「${traveler.name}」移出此行程嗎？此動作無法復原。`)) return
+
+    setSavingError('')
+    setRemovingTravelerId(traveler.id)
+    try {
+      await removeTraveler(groupId, traveler.id)
+      setRefreshKey((x) => x + 1)
+    } catch (err) {
+      setSavingError(err.message || '移除團員失敗')
+    } finally {
+      setRemovingTravelerId(null)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -341,6 +360,57 @@ function AdminGroupDetailPage() {
             </button>
           ))}
         </div>
+
+        {activeTab === 'travelers' && (
+          <div className="mt-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-slate-900">團員名單</h2>
+              <p className="text-sm text-slate-500">共 {travelers.length} 人</p>
+            </div>
+
+            {travelers.length === 0 && (
+              <p className="mt-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-400">
+                尚無旅客加入，分享上方的加入連結或 QR Code 給團員。
+              </p>
+            )}
+
+            {travelers.length > 0 && (
+              <div className="mt-4 overflow-x-auto rounded-2xl border border-slate-200">
+                <table className="min-w-full divide-y divide-slate-200 text-sm">
+                  <thead className="bg-slate-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left font-semibold text-slate-600">姓名</th>
+                      <th className="px-4 py-3 text-left font-semibold text-slate-600">手機</th>
+                      <th className="px-4 py-3 text-left font-semibold text-slate-600">備註</th>
+                      <th className="px-4 py-3 text-left font-semibold text-slate-600">加入時間</th>
+                      <th className="px-4 py-3 text-right font-semibold text-slate-600">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {travelers.map((traveler) => (
+                      <tr key={traveler.id}>
+                        <td className="px-4 py-3 font-semibold text-slate-900">{traveler.name}</td>
+                        <td className="px-4 py-3 text-slate-700">{traveler.phone}</td>
+                        <td className="px-4 py-3 text-slate-500">{traveler.notes || '-'}</td>
+                        <td className="px-4 py-3 text-slate-500">{formatDateTime(traveler.joinedAt)}</td>
+                        <td className="px-4 py-3 text-right">
+                          <button
+                            type="button"
+                            disabled={!canEdit || removingTravelerId === traveler.id}
+                            onClick={() => handleRemoveTraveler(traveler)}
+                            className="rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-semibold text-rose-600 hover:border-rose-300 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {removingTravelerId === traveler.id ? '移除中...' : '移出行程'}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
 
         {activeTab === 'announcements' && (
           <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_1.4fr]">

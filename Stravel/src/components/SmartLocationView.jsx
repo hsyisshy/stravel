@@ -56,14 +56,6 @@ function SmartLocationView({ group }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-600">
-        <span className="relative flex h-2.5 w-2.5">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75" />
-          <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-cyan-500" />
-        </span>
-        系統正持續追蹤定位中
-      </div>
-
       {!hasMeetingPoint && (
         <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-700">
           尚未設定集合地點座標，請聯繫導遊或管理員於後台設定，才能顯示安全範圍提醒。

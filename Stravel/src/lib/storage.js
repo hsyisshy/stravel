@@ -268,6 +268,18 @@ export async function addTraveler(groupId, payload) {
   return toParticipant(traveler)
 }
 
+export async function removeTraveler(groupId, participantId) {
+  await must(
+    supabase
+      .from('participants')
+      .delete()
+      .eq('id', participantId)
+      .eq('group_id', groupId),
+  )
+
+  return true
+}
+
 export async function addAnnouncement(groupId, payload) {
   const row = await must(
     supabase
