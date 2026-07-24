@@ -1,12 +1,16 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createGroup } from '../lib/storage'
+import LocationPicker from '../components/LocationPicker'
 
 const initialForm = {
   name: '',
   departureDate: '',
   returnDate: '',
   meetingPoint: '',
+  meetingLat: null,
+  meetingLng: null,
+  safetyRadiusM: 300,
   guideName: '',
   guidePhone: '',
   notes: '',
@@ -82,6 +86,33 @@ function NewGroupPage() {
             className="form-input"
             value={form.meetingPoint}
             onChange={(e) => updateField('meetingPoint', e.target.value)}
+          />
+        </label>
+
+        <div className="sm:col-span-2">
+          <p className="form-label mb-2">
+            集合地點座標（點選地圖設定「智慧定位」中心點，可選填）
+          </p>
+          <LocationPicker
+            lat={form.meetingLat}
+            lng={form.meetingLng}
+            radiusM={form.safetyRadiusM}
+            onChange={({ lat, lng }) => {
+              updateField('meetingLat', lat)
+              updateField('meetingLng', lng)
+            }}
+          />
+        </div>
+
+        <label className="form-label">
+          安全範圍半徑（公尺）
+          <input
+            type="number"
+            min="20"
+            step="10"
+            className="form-input"
+            value={form.safetyRadiusM}
+            onChange={(e) => updateField('safetyRadiusM', Number(e.target.value) || 300)}
           />
         </label>
 

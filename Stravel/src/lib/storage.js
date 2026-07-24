@@ -14,6 +14,9 @@ function toCamelGroup(row) {
     departureDate: row.departure_date,
     returnDate: row.return_date,
     meetingPoint: row.meeting_point,
+    meetingLat: row.meeting_lat,
+    meetingLng: row.meeting_lng,
+    safetyRadiusM: row.safety_radius_m,
     guideName: row.guide_name,
     guidePhone: row.guide_phone,
     notes: row.notes || '',
@@ -57,6 +60,7 @@ function toItineraryItem(row) {
 function toPhoto(row) {
   return {
     id: row.id,
+    participantId: row.participant_id || null,
     title: row.title,
     image: row.image_url,
     uploadedAt: row.uploaded_at,
@@ -84,7 +88,7 @@ export async function getGroups() {
     supabase
       .from('groups')
       .select(
-        'id,name,departure_date,return_date,meeting_point,guide_name,guide_phone,notes,admin_token,created_at,participants(id)',
+        'id,name,departure_date,return_date,meeting_point,meeting_lat,meeting_lng,safety_radius_m,guide_name,guide_phone,notes,admin_token,created_at,participants(id)',
       )
       .order('departure_date', { ascending: true }),
   )
@@ -104,7 +108,7 @@ export async function getGroupById(groupId) {
     supabase
       .from('groups')
       .select(
-        'id,name,departure_date,return_date,meeting_point,guide_name,guide_phone,notes,admin_token,created_at',
+        'id,name,departure_date,return_date,meeting_point,meeting_lat,meeting_lng,safety_radius_m,guide_name,guide_phone,notes,admin_token,created_at',
       )
       .eq('id', groupId)
       .maybeSingle(),
@@ -139,7 +143,7 @@ export async function getGroupById(groupId) {
       must(
         supabase
           .from('photos')
-          .select('id,title,image_url,uploaded_at')
+          .select('id,participant_id,title,image_url,uploaded_at')
           .eq('group_id', groupId)
           .order('uploaded_at', { ascending: false }),
       ),
@@ -194,18 +198,40 @@ export async function createGroup(payload) {
         departure_date: payload.departureDate,
         return_date: payload.returnDate,
         meeting_point: payload.meetingPoint,
+        meeting_lat: payload.meetingLat ?? null,
+        meeting_lng: payload.meetingLng ?? null,
+        safety_radius_m: payload.safetyRadiusM || 300,
         guide_name: payload.guideName,
         guide_phone: payload.guidePhone,
         notes: payload.notes || '',
         admin_token: adminToken,
       })
       .select(
-        'id,name,departure_date,return_date,meeting_point,guide_name,guide_phone,notes,admin_token,created_at',
+        'id,name,departure_date,return_date,meeting_point,meeting_lat,meeting_lng,safety_radius_m,guide_name,guide_phone,notes,admin_token,created_at',
       )
       .single(),
   )
 
   return toCamelGroup(inserted)
+}
+
+export async function updateGroupLocation(groupId, payload) {
+  const updated = await must(
+    supabase
+      .from('groups')
+      .update({
+        meeting_lat: payload.meetingLat ?? null,
+        meeting_lng: payload.meetingLng ?? null,
+        safety_radius_m: payload.safetyRadiusM || 300,
+      })
+      .eq('id', groupId)
+      .select(
+        'id,name,departure_date,return_date,meeting_point,meeting_lat,meeting_lng,safety_radius_m,guide_name,guide_phone,notes,admin_token,created_at',
+      )
+      .single(),
+  )
+
+  return toCamelGroup(updated)
 }
 
 export async function addTraveler(groupId, payload) {
@@ -297,11 +323,12 @@ export async function addPhoto(groupId, payload) {
       .from('photos')
       .insert({
         group_id: groupId,
+        participant_id: payload.participantId || null,
         title: payload.title,
         image_url: publicData.publicUrl,
         storage_path: path,
       })
-      .select('id,title,image_url,uploaded_at')
+      .select('id,participant_id,title,image_url,uploaded_at')
       .single(),
   )
 
@@ -399,6 +426,38 @@ export function getPhotoFeed(group) {
   return [...photos].sort(
     (a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime(),
   )
+}
+
+function participantStorageKey(groupId) {
+  return `stravel:participant:${groupId}`
+}
+
+export function getStoredParticipantId(groupId) {
+  try {
+    return window.localStorage.getItem(participantStorageKey(groupId))
+  } catch {
+    return null
+  }
+}
+
+export function storeParticipantId(groupId, participantId) {
+  try {
+    window.localStorage.setItem(participantStorageKey(groupId), participantId)
+  } catch {
+    // localStorage unavailable (private mode, etc.) - ignore, feature degrades gracefully
+  }
+}
+
+export function distanceMeters(lat1, lng1, lat2, lng2) {
+  const R = 6371000
+  const toRad = (deg) => (deg * Math.PI) / 180
+  const dLat = toRad(lat2 - lat1)
+  const dLng = toRad(lng2 - lng1)
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  return R * c
 }
 
 export function formatDate(dateLike) {

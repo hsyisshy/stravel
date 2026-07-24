@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { addTraveler, getGroupById } from '../lib/storage'
+import { addTraveler, getGroupById, storeParticipantId } from '../lib/storage'
 
 function GroupJoinPage() {
   const { groupId } = useParams()
@@ -56,7 +56,8 @@ function GroupJoinPage() {
     e.preventDefault()
     setSubmitting(true)
     try {
-      await addTraveler(groupId, form)
+      const traveler = await addTraveler(groupId, form)
+      storeParticipantId(groupId, traveler.id)
       navigate(`/group/${groupId}`)
     } catch (err) {
       setError(err.message || '加入團體失敗')

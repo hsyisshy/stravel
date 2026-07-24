@@ -13,7 +13,9 @@ import {
   getItineraryFeed,
   getPhotoFeed,
   setAttendanceStatus,
+  updateGroupLocation,
 } from '../lib/storage'
+import LocationPicker from '../components/LocationPicker'
 
 const tabs = [
   { key: 'announcements', label: '公告區' },
@@ -46,6 +48,8 @@ function AdminGroupDetailPage() {
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
   const [attendanceForm, setAttendanceForm] = useState({ title: '' })
   const [savingError, setSavingError] = useState('')
+  const [locationForm, setLocationForm] = useState({ lat: null, lng: null, radiusM: 300 })
+  const [savingLocation, setSavingLocation] = useState(false)
 
   useEffect(() => {
     async function loadGroup() {
@@ -54,6 +58,11 @@ function AdminGroupDetailPage() {
       try {
         const data = await getGroupById(groupId)
         setGroup(data)
+        setLocationForm({
+          lat: data?.meetingLat ?? null,
+          lng: data?.meetingLng ?? null,
+          radiusM: data?.safetyRadiusM || 300,
+        })
       } catch (err) {
         setError(err.message || '讀取團體失敗')
       } finally {
@@ -162,6 +171,24 @@ function AdminGroupDetailPage() {
       })
   }
 
+  async function handleLocationSave() {
+    if (!canEdit) return
+    setSavingError('')
+    setSavingLocation(true)
+    try {
+      await updateGroupLocation(groupId, {
+        meetingLat: locationForm.lat,
+        meetingLng: locationForm.lng,
+        safetyRadiusM: locationForm.radiusM,
+      })
+      setRefreshKey((x) => x + 1)
+    } catch (err) {
+      setSavingError(err.message || '儲存集合地點座標失敗')
+    } finally {
+      setSavingLocation(false)
+    }
+  }
+
   function handleAttendanceToggle(eventId, travelerId, checked) {
     if (!canEdit) return
     setAttendanceStatus(groupId, eventId, travelerId, checked)
@@ -227,6 +254,47 @@ function AdminGroupDetailPage() {
               <dd className="mt-1 rounded-xl bg-slate-50 p-3 text-slate-700">{group.notes || '-'}</dd>
             </div>
           </dl>
+
+          <div className="mt-6 border-t border-slate-200 pt-5">
+            <h3 className="text-base font-bold text-slate-900">智慧定位設定</h3>
+            <p className="mt-1 text-xs text-slate-500">
+              點選地圖設定集合地點座標，旅客端會依此顯示安全範圍與距離提醒。
+            </p>
+            <div className="mt-3">
+              <LocationPicker
+                lat={locationForm.lat}
+                lng={locationForm.lng}
+                radiusM={locationForm.radiusM}
+                onChange={({ lat, lng }) =>
+                  canEdit && setLocationForm((prev) => ({ ...prev, lat, lng }))
+                }
+              />
+            </div>
+            <div className="mt-3 flex flex-wrap items-end gap-3">
+              <label className="form-label">
+                安全範圍半徑（公尺）
+                <input
+                  type="number"
+                  min="20"
+                  step="10"
+                  disabled={!canEdit}
+                  className="form-input"
+                  value={locationForm.radiusM}
+                  onChange={(e) =>
+                    setLocationForm((prev) => ({ ...prev, radiusM: Number(e.target.value) || 300 }))
+                  }
+                />
+              </label>
+              <button
+                type="button"
+                disabled={!canEdit || savingLocation}
+                onClick={handleLocationSave}
+                className="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {savingLocation ? '儲存中...' : '儲存座標設定'}
+              </button>
+            </div>
+          </div>
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">

@@ -8,12 +8,19 @@ create table if not exists public.groups (
   departure_date date not null,
   return_date date not null,
   meeting_point text not null,
+  meeting_lat double precision,
+  meeting_lng double precision,
+  safety_radius_m integer not null default 300,
   guide_name text not null,
   guide_phone text not null,
   notes text default '',
   admin_token text not null unique,
   created_at timestamptz not null default now()
 );
+
+alter table public.groups add column if not exists meeting_lat double precision;
+alter table public.groups add column if not exists meeting_lng double precision;
+alter table public.groups add column if not exists safety_radius_m integer not null default 300;
 
 -- participants (travelers)
 create table if not exists public.participants (
@@ -59,13 +66,17 @@ create index if not exists idx_itinerary_datetime on public.itinerary_items(item
 create table if not exists public.photos (
   id uuid primary key default gen_random_uuid(),
   group_id uuid not null references public.groups(id) on delete cascade,
+  participant_id uuid references public.participants(id) on delete set null,
   title text not null,
   image_url text not null,
   storage_path text not null,
   uploaded_at timestamptz not null default now()
 );
 
+alter table public.photos add column if not exists participant_id uuid references public.participants(id) on delete set null;
+
 create index if not exists idx_photos_group_id on public.photos(group_id);
+create index if not exists idx_photos_participant_id on public.photos(participant_id);
 
 -- attendance events
 create table if not exists public.attendance_events (
