@@ -1,62 +1,45 @@
-import { useMemo } from 'react'
-import { MapContainer, TileLayer, Marker, Circle, useMapEvents } from 'react-leaflet'
-import L from 'leaflet'
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
-import markerIcon from 'leaflet/dist/images/marker-icon.png'
-import markerShadow from 'leaflet/dist/images/marker-shadow.png'
+import { Map, Marker, Circle } from '@vis.gl/react-google-maps'
 
-const defaultIcon = L.icon({
-  iconRetinaUrl: markerIcon2x,
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-})
+const FALLBACK_CENTER = { lat: 25.033, lng: 121.5654 } // Taipei
 
-const FALLBACK_CENTER = [25.033, 121.5654] // Taipei
-
-function ClickToPlace({ onPick }) {
-  useMapEvents({
-    click(e) {
-      onPick(e.latlng.lat, e.latlng.lng)
-    },
-  })
-  return null
+function toLatLngLiteral(latLng) {
+  if (!latLng) return null
+  const lat = typeof latLng.lat === 'function' ? latLng.lat() : latLng.lat
+  const lng = typeof latLng.lng === 'function' ? latLng.lng() : latLng.lng
+  return { lat, lng }
 }
 
 function LocationPicker({ lat, lng, radiusM, onChange }) {
-  const center = useMemo(() => {
-    if (typeof lat === 'number' && typeof lng === 'number') return [lat, lng]
-    return FALLBACK_CENTER
-  }, [lat, lng])
-
   const hasPoint = typeof lat === 'number' && typeof lng === 'number'
+  const center = hasPoint ? { lat, lng } : FALLBACK_CENTER
 
   return (
     <div className="overflow-hidden rounded-xl border border-slate-200">
-      <MapContainer center={center} zoom={hasPoint ? 16 : 12} style={{ height: 260, width: '100%' }}>
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        <ClickToPlace onPick={(pickedLat, pickedLng) => onChange({ lat: pickedLat, lng: pickedLng })} />
+      <Map
+        style={{ height: 260, width: '100%' }}
+        defaultCenter={center}
+        defaultZoom={hasPoint ? 16 : 12}
+        gestureHandling="greedy"
+        disableDefaultUI={false}
+        onClick={(e) => {
+          const picked = toLatLngLiteral(e.detail.latLng)
+          if (picked) onChange(picked)
+        }}
+      >
         {hasPoint && (
           <>
             <Marker
-              position={[lat, lng]}
-              icon={defaultIcon}
+              position={center}
               draggable
-              eventHandlers={{
-                dragend(e) {
-                  const pos = e.target.getLatLng()
-                  onChange({ lat: pos.lat, lng: pos.lng })
-                },
+              onDragEnd={(e) => {
+                const picked = toLatLngLiteral(e.latLng)
+                if (picked) onChange(picked)
               }}
             />
-            <Circle center={[lat, lng]} radius={radiusM || 300} pathOptions={{ color: '#0891b2' }} />
+            <Circle center={center} radius={radiusM || 300} strokeColor="#0891b2" strokeWeight={2} fillColor="#0891b2" fillOpacity={0.15} />
           </>
         )}
-      </MapContainer>
+      </Map>
     </div>
   )
 }

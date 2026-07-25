@@ -1,4 +1,5 @@
 import { Link, NavLink, Route, Routes, useLocation } from 'react-router-dom'
+import { APIProvider } from '@vis.gl/react-google-maps'
 import HomePage from './pages/HomePage'
 import AdminGroupsPage from './pages/AdminGroupsPage'
 import NewGroupPage from './pages/NewGroupPage'
@@ -61,24 +62,26 @@ function App() {
   const isTravelerRoute = location.pathname.startsWith('/group/')
 
   return (
-    <Shell bare={isTravelerRoute}>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/admin/groups" element={<AdminGroupsPage />} />
-        <Route path="/admin/groups/new" element={<NewGroupPage />} />
-        <Route path="/admin/groups/:groupId" element={<AdminGroupDetailPage />} />
-        <Route path="/group/:groupId/join" element={<GroupJoinPage />} />
-        <Route path="/group/:groupId" element={<GroupPublicPage />} />
-        <Route
-          path="*"
-          element={
-            <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center shadow-sm">
-              <h1 className="text-2xl font-bold text-slate-900">找不到頁面</h1>
-            </div>
-          }
-        />
-      </Routes>
-    </Shell>
+    <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
+      <Shell bare={isTravelerRoute}>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/admin/groups" element={<AdminGroupsPage />} />
+          <Route path="/admin/groups/new" element={<NewGroupPage />} />
+          <Route path="/admin/groups/:groupId" element={<AdminGroupDetailPage />} />
+          <Route path="/group/:groupId/join" element={<GroupJoinPage />} />
+          <Route path="/group/:groupId" element={<GroupPublicPage />} />
+          <Route
+            path="*"
+            element={
+              <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center shadow-sm">
+                <h1 className="text-2xl font-bold text-slate-900">找不到頁面</h1>
+              </div>
+            }
+          />
+        </Routes>
+      </Shell>
+    </APIProvider>
   )
 }
 

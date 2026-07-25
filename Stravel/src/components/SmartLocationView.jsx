@@ -1,15 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
-import { MapContainer, TileLayer, Marker, Circle } from 'react-leaflet'
-import L from 'leaflet'
+import { Map, Marker, Circle } from '@vis.gl/react-google-maps'
 import { distanceMeters } from '../lib/storage'
 
 function dotIcon(color) {
-  return L.divIcon({
-    className: '',
-    html: `<span style="display:block;width:16px;height:16px;border-radius:9999px;background:${color};border:2px solid white;box-shadow:0 0 0 1px rgba(0,0,0,0.25)"></span>`,
-    iconSize: [16, 16],
-    iconAnchor: [8, 8],
-  })
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><circle cx="10" cy="10" r="8" fill="${color}" stroke="white" stroke-width="2"/></svg>`
+  const url = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`
+  const maps = window.google?.maps
+  return maps ? { url, scaledSize: new maps.Size(20, 20), anchor: new maps.Point(10, 10) } : url
 }
 
 const meetingIcon = dotIcon('#e11d48')
@@ -48,11 +45,8 @@ function SmartLocationView({ group }) {
   const radiusM = group.safetyRadiusM || 300
   const isOutside = distance !== null && distance > radiusM
 
-  const mapCenter = hasMeetingPoint
-    ? [group.meetingLat, group.meetingLng]
-    : position
-      ? [position.lat, position.lng]
-      : [25.033, 121.5654]
+  const meetingPoint = hasMeetingPoint ? { lat: group.meetingLat, lng: group.meetingLng } : null
+  const mapCenter = meetingPoint || position || { lat: 25.033, lng: 121.5654 }
 
   return (
     <div className="space-y-4">
@@ -81,19 +75,17 @@ function SmartLocationView({ group }) {
         </div>
       )}
 
-      <MapContainer center={mapCenter} zoom={hasMeetingPoint ? 16 : 13} style={{ height: 320, width: '100%' }} className="overflow-hidden rounded-2xl border border-slate-200">
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        {hasMeetingPoint && (
-          <>
-            <Marker position={[group.meetingLat, group.meetingLng]} icon={meetingIcon} />
-            <Circle center={[group.meetingLat, group.meetingLng]} radius={radiusM} pathOptions={{ color: '#0891b2' }} />
-          </>
-        )}
-        {position && <Marker position={[position.lat, position.lng]} icon={userIcon} />}
-      </MapContainer>
+      <div className="overflow-hidden rounded-2xl border border-slate-200">
+        <Map style={{ height: 320, width: '100%' }} defaultCenter={mapCenter} defaultZoom={hasMeetingPoint ? 16 : 13} gestureHandling="greedy">
+          {meetingPoint && (
+            <>
+              <Marker position={meetingPoint} icon={meetingIcon} />
+              <Circle center={meetingPoint} radius={radiusM} strokeColor="#0891b2" strokeWeight={2} fillColor="#0891b2" fillOpacity={0.12} />
+            </>
+          )}
+          {position && <Marker position={position} icon={userIcon} />}
+        </Map>
+      </div>
 
       <div className="flex items-center gap-4 text-xs text-slate-500">
         <span className="flex items-center gap-1.5">
