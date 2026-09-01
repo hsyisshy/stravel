@@ -11,8 +11,7 @@ import {
   where,
   serverTimestamp,
 } from 'firebase/firestore'
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { db, storage } from './firebase'
+import { db } from './firebase'
 
 function toCamelGroup(id, data = {}) {
   return {
@@ -80,9 +79,6 @@ function createAdminToken() {
   return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')
 }
 
-function randomSuffix() {
-  return Math.random().toString(36).slice(2, 9)
-}
 
 /**
  * 取得所有團體列表
@@ -337,29 +333,60 @@ export async function deleteItineraryItem(groupId, itemId) {
   return true
 }
 
+function compressImageToBase64(file, maxWidth = 1000, maxHeight = 1000, quality = 0.75) {
+  return new Promise((resolve, reject) => {
+    if (typeof file === 'string') {
+      return resolve(file)
+    }
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        let { width, height } = img
+
+        if (width > height) {
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width)
+            width = maxWidth
+          }
+        } else {
+          if (height > maxHeight) {
+            width = Math.round((width * maxHeight) / height)
+            height = maxHeight
+          }
+        }
+
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(img, 0, 0, width, height)
+
+        const dataUrl = canvas.toDataURL('image/jpeg', quality)
+        resolve(dataUrl)
+      }
+      img.onerror = reject
+      img.src = e.target.result
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+}
+
 /**
- * 上傳照片至 Firebase Storage 並記錄於 Firestore
+ * 上傳照片（以 Base64 壓縮儲存於 Firestore，免 Storage 額外設定）
  */
 export async function addPhoto(groupId, payload) {
   const file = payload.file
-  const ext = file.name?.split('.').pop() || 'jpg'
-  const path = `group-photos/${groupId}/${Date.now()}_${randomSuffix()}.${ext}`
-
-  const storageRef = ref(storage, path)
-  await uploadBytes(storageRef, file, {
-    contentType: file.type || 'image/jpeg',
-  })
-
-  const downloadUrl = await getDownloadURL(storageRef)
+  const dataUrl = await compressImageToBase64(file)
 
   const photosRef = collection(db, 'groups', groupId, 'photos')
   const newDoc = doc(photosRef)
 
   const photoData = {
     participant_id: payload.participantId || null,
-    title: payload.title,
-    image_url: downloadUrl,
-    storage_path: path,
+    title: payload.title || '照片',
+    image_url: dataUrl,
     uploaded_at: serverTimestamp(),
   }
 
