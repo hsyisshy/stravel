@@ -117,7 +117,7 @@ export async function getGroupById(groupId) {
     await Promise.all([
       getDocs(query(collection(db, 'groups', groupId, 'participants'), orderBy('joined_at', 'asc'))),
       getDocs(query(collection(db, 'groups', groupId, 'announcements'), orderBy('published_at', 'desc'))),
-      getDocs(query(collection(db, 'groups', groupId, 'itinerary'), orderBy('item_date', 'asc'), orderBy('item_time', 'asc'))),
+      getDocs(collection(db, 'groups', groupId, 'itinerary')),
       getDocs(query(collection(db, 'groups', groupId, 'photos'), orderBy('uploaded_at', 'desc'))),
       getDocs(query(collection(db, 'groups', groupId, 'attendance_events'), orderBy('created_at', 'desc'))),
       getDocs(collection(db, 'groups', groupId, 'attendance_records')),
