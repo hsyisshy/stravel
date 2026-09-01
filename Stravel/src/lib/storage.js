@@ -1,69 +1,76 @@
-import { supabase } from './supabase'
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  orderBy,
+  where,
+  serverTimestamp,
+} from 'firebase/firestore'
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+import { db, storage } from './firebase'
 
-const UUID_V4_LIKE_REGEX =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-
-function isUuidLike(value) {
-  return UUID_V4_LIKE_REGEX.test(String(value || '').trim())
-}
-
-function toCamelGroup(row) {
+function toCamelGroup(id, data = {}) {
   return {
-    id: row.id,
-    name: row.name,
-    departureDate: row.departure_date,
-    returnDate: row.return_date,
-    meetingPoint: row.meeting_point,
-    meetingLat: row.meeting_lat,
-    meetingLng: row.meeting_lng,
-    safetyRadiusM: row.safety_radius_m,
-    guideName: row.guide_name,
-    guidePhone: row.guide_phone,
-    notes: row.notes || '',
-    adminToken: row.admin_token,
-    createdAt: row.created_at,
+    id: id,
+    name: data.name || '',
+    departureDate: data.departure_date || data.departureDate || '',
+    returnDate: data.return_date || data.returnDate || '',
+    meetingPoint: data.meeting_point || data.meetingPoint || '',
+    meetingLat: typeof data.meeting_lat === 'number' ? data.meeting_lat : (data.meetingLat ?? null),
+    meetingLng: typeof data.meeting_lng === 'number' ? data.meeting_lng : (data.meetingLng ?? null),
+    safetyRadiusM: Number(data.safety_radius_m || data.safetyRadiusM) || 300,
+    guideName: data.guide_name || data.guideName || '',
+    guidePhone: data.guide_phone || data.guidePhone || '',
+    notes: data.notes || '',
+    adminToken: data.admin_token || data.adminToken || '',
+    createdAt: data.created_at?.toDate ? data.created_at.toDate().toISOString() : (data.createdAt || new Date().toISOString()),
   }
 }
 
-function toParticipant(row) {
+function toParticipant(id, data = {}) {
   return {
-    id: row.id,
-    name: row.name,
-    phone: row.phone,
-    notes: row.notes || '',
-    joinedAt: row.joined_at,
+    id: id,
+    name: data.name || '',
+    phone: data.phone || '',
+    notes: data.notes || '',
+    joinedAt: data.joined_at?.toDate ? data.joined_at.toDate().toISOString() : (data.joinedAt || new Date().toISOString()),
   }
 }
 
-function toAnnouncement(row) {
+function toAnnouncement(id, data = {}) {
   return {
-    id: row.id,
-    title: row.title,
-    content: row.content,
-    pinned: row.pinned,
-    publishedAt: row.published_at,
+    id: id,
+    title: data.title || '',
+    content: data.content || '',
+    pinned: Boolean(data.pinned),
+    publishedAt: data.published_at?.toDate ? data.published_at.toDate().toISOString() : (data.publishedAt || new Date().toISOString()),
   }
 }
 
-function toItineraryItem(row) {
+function toItineraryItem(id, data = {}) {
   return {
-    id: row.id,
-    date: row.item_date,
-    time: row.item_time,
-    title: row.title,
-    location: row.location,
-    description: row.description || '',
-    createdAt: row.created_at,
+    id: id,
+    date: data.item_date || data.date || '',
+    time: data.item_time || data.time || '',
+    title: data.title || '',
+    location: data.location || '',
+    description: data.description || '',
+    createdAt: data.created_at?.toDate ? data.created_at.toDate().toISOString() : (data.createdAt || new Date().toISOString()),
   }
 }
 
-function toPhoto(row) {
+function toPhoto(id, data = {}) {
   return {
-    id: row.id,
-    participantId: row.participant_id || null,
-    title: row.title,
-    image: row.image_url,
-    uploadedAt: row.uploaded_at,
+    id: id,
+    participantId: data.participant_id || data.participantId || null,
+    title: data.title || '',
+    image: data.image_url || data.image || '',
+    uploadedAt: data.uploaded_at?.toDate ? data.uploaded_at.toDate().toISOString() : (data.uploadedAt || new Date().toISOString()),
   }
 }
 
@@ -77,373 +84,345 @@ function randomSuffix() {
   return Math.random().toString(36).slice(2, 9)
 }
 
-async function must(dataPromise) {
-  const { data, error } = await dataPromise
-  if (error) throw error
-  return data
-}
-
+/**
+ * 取得所有團體列表
+ */
 export async function getGroups() {
-  const data = await must(
-    supabase
-      .from('groups')
-      .select(
-        'id,name,departure_date,return_date,meeting_point,meeting_lat,meeting_lng,safety_radius_m,guide_name,guide_phone,notes,admin_token,created_at,participants(id)',
-      )
-      .order('departure_date', { ascending: true }),
+  const groupsRef = collection(db, 'groups')
+  const q = query(groupsRef, orderBy('departure_date', 'asc'))
+  const snapshot = await getDocs(q)
+
+  const groupList = await Promise.all(
+    snapshot.docs.map(async (docSnap) => {
+      const gData = docSnap.data()
+      const participantsSnap = await getDocs(collection(db, 'groups', docSnap.id, 'participants'))
+      return {
+        ...toCamelGroup(docSnap.id, gData),
+        travelers: participantsSnap.docs.map((p) => toParticipant(p.id, p.data())),
+      }
+    }),
   )
 
-  return (data || []).map((row) => ({
-    ...toCamelGroup(row),
-    travelers: row.participants || [],
-  }))
+  return groupList
 }
 
+/**
+ * 根據 groupId 取得完整團體資料（含行程、公告、團員、照片、點名）
+ */
 export async function getGroupById(groupId) {
-  if (!isUuidLike(groupId)) {
-    return null
-  }
+  if (!groupId) return null
 
-  const groupRow = await must(
-    supabase
-      .from('groups')
-      .select(
-        'id,name,departure_date,return_date,meeting_point,meeting_lat,meeting_lng,safety_radius_m,guide_name,guide_phone,notes,admin_token,created_at',
-      )
-      .eq('id', groupId)
-      .maybeSingle(),
-  )
+  const groupDocRef = doc(db, 'groups', groupId)
+  const groupSnap = await getDoc(groupDocRef)
 
-  if (!groupRow) return null
+  if (!groupSnap.exists()) return null
 
-  const [participants, announcements, itineraryItems, photos, attendanceEvents, attendanceRecords] =
+  const [participantsSnap, announcementsSnap, itinerarySnap, photosSnap, eventsSnap, recordsSnap] =
     await Promise.all([
-      must(
-        supabase
-          .from('participants')
-          .select('id,name,phone,notes,joined_at')
-          .eq('group_id', groupId)
-          .order('joined_at', { ascending: true }),
-      ),
-      must(
-        supabase
-          .from('announcements')
-          .select('id,title,content,pinned,published_at')
-          .eq('group_id', groupId)
-          .order('published_at', { ascending: false }),
-      ),
-      must(
-        supabase
-          .from('itinerary_items')
-          .select('id,item_date,item_time,title,location,description,created_at')
-          .eq('group_id', groupId)
-          .order('item_date', { ascending: true })
-          .order('item_time', { ascending: true }),
-      ),
-      must(
-        supabase
-          .from('photos')
-          .select('id,participant_id,title,image_url,uploaded_at')
-          .eq('group_id', groupId)
-          .order('uploaded_at', { ascending: false }),
-      ),
-      must(
-        supabase
-          .from('attendance_events')
-          .select('id,title,created_at')
-          .eq('group_id', groupId)
-          .order('created_at', { ascending: false }),
-      ),
-      must(
-        supabase
-          .from('attendance_records')
-          .select('event_id,participant_id,arrived')
-          .eq('group_id', groupId),
-      ),
+      getDocs(query(collection(db, 'groups', groupId, 'participants'), orderBy('joined_at', 'asc'))),
+      getDocs(query(collection(db, 'groups', groupId, 'announcements'), orderBy('published_at', 'desc'))),
+      getDocs(query(collection(db, 'groups', groupId, 'itinerary'), orderBy('item_date', 'asc'), orderBy('item_time', 'asc'))),
+      getDocs(query(collection(db, 'groups', groupId, 'photos'), orderBy('uploaded_at', 'desc'))),
+      getDocs(query(collection(db, 'groups', groupId, 'attendance_events'), orderBy('created_at', 'desc'))),
+      getDocs(collection(db, 'groups', groupId, 'attendance_records')),
     ])
 
-  const attendanceEventsWithRecords = (attendanceEvents || []).map((event) => {
+  const attendanceRecords = recordsSnap.docs.map((d) => d.data())
+
+  const attendanceEventsWithRecords = eventsSnap.docs.map((eDoc) => {
+    const eData = eDoc.data()
     const records = {}
-    ;(attendanceRecords || [])
-      .filter((record) => record.event_id === event.id)
+    attendanceRecords
+      .filter((record) => record.event_id === eDoc.id)
       .forEach((record) => {
         records[record.participant_id] = record.arrived
       })
 
     return {
-      id: event.id,
-      title: event.title,
-      createdAt: event.created_at,
+      id: eDoc.id,
+      title: eData.title || '',
+      createdAt: eData.created_at?.toDate ? eData.created_at.toDate().toISOString() : new Date().toISOString(),
       records,
     }
   })
 
   return {
-    ...toCamelGroup(groupRow),
-    travelers: (participants || []).map(toParticipant),
-    announcements: (announcements || []).map(toAnnouncement),
-    itinerary: (itineraryItems || []).map(toItineraryItem),
-    photos: (photos || []).map(toPhoto),
+    ...toCamelGroup(groupSnap.id, groupSnap.data()),
+    travelers: participantsSnap.docs.map((d) => toParticipant(d.id, d.data())),
+    announcements: announcementsSnap.docs.map((d) => toAnnouncement(d.id, d.data())),
+    itinerary: itinerarySnap.docs.map((d) => toItineraryItem(d.id, d.data())),
+    photos: photosSnap.docs.map((d) => toPhoto(d.id, d.data())),
     attendanceEvents: attendanceEventsWithRecords,
   }
 }
 
+/**
+ * 建立新旅遊團體
+ */
 export async function createGroup(payload) {
   const adminToken = createAdminToken()
-  const inserted = await must(
-    supabase
-      .from('groups')
-      .insert({
-        name: payload.name,
-        departure_date: payload.departureDate,
-        return_date: payload.returnDate,
-        meeting_point: payload.meetingPoint,
-        meeting_lat: payload.meetingLat ?? null,
-        meeting_lng: payload.meetingLng ?? null,
-        safety_radius_m: payload.safetyRadiusM || 300,
-        guide_name: payload.guideName,
-        guide_phone: payload.guidePhone,
-        notes: payload.notes || '',
-        admin_token: adminToken,
-      })
-      .select(
-        'id,name,departure_date,return_date,meeting_point,meeting_lat,meeting_lng,safety_radius_m,guide_name,guide_phone,notes,admin_token,created_at',
-      )
-      .single(),
-  )
+  const groupsRef = collection(db, 'groups')
+  const newDoc = doc(groupsRef)
 
-  return toCamelGroup(inserted)
+  const groupData = {
+    name: payload.name,
+    departure_date: payload.departureDate,
+    return_date: payload.returnDate,
+    meeting_point: payload.meetingPoint,
+    meeting_lat: payload.meetingLat ?? null,
+    meeting_lng: payload.meetingLng ?? null,
+    safety_radius_m: payload.safetyRadiusM || 300,
+    guide_name: payload.guideName,
+    guide_phone: payload.guidePhone,
+    notes: payload.notes || '',
+    admin_token: adminToken,
+    created_at: serverTimestamp(),
+  }
+
+  await setDoc(newDoc, groupData)
+
+  return toCamelGroup(newDoc.id, {
+    ...groupData,
+    created_at: new Date(),
+  })
 }
 
+/**
+ * 更新集合地點座標與安全半徑
+ */
 export async function updateGroupLocation(groupId, payload) {
-  const updated = await must(
-    supabase
-      .from('groups')
-      .update({
-        meeting_lat: payload.meetingLat ?? null,
-        meeting_lng: payload.meetingLng ?? null,
-        safety_radius_m: payload.safetyRadiusM || 300,
-      })
-      .eq('id', groupId)
-      .select(
-        'id,name,departure_date,return_date,meeting_point,meeting_lat,meeting_lng,safety_radius_m,guide_name,guide_phone,notes,admin_token,created_at',
-      )
-      .single(),
-  )
+  const groupRef = doc(db, 'groups', groupId)
+  await updateDoc(groupRef, {
+    meeting_lat: payload.meetingLat ?? null,
+    meeting_lng: payload.meetingLng ?? null,
+    safety_radius_m: payload.safetyRadiusM || 300,
+  })
 
-  return toCamelGroup(updated)
+  const updatedSnap = await getDoc(groupRef)
+  return toCamelGroup(groupId, updatedSnap.data())
 }
 
+/**
+ * 旅客加入團體
+ */
 export async function addTraveler(groupId, payload) {
-  const traveler = await must(
-    supabase
-      .from('participants')
-      .insert({
-        group_id: groupId,
-        name: payload.name,
-        phone: payload.phone,
-        notes: payload.notes || '',
-      })
-      .select('id,name,phone,notes,joined_at')
-      .single(),
-  )
+  const participantsRef = collection(db, 'groups', groupId, 'participants')
+  const newDoc = doc(participantsRef)
 
-  const events = await must(
-    supabase.from('attendance_events').select('id').eq('group_id', groupId),
-  )
+  const travelerData = {
+    name: payload.name,
+    phone: payload.phone,
+    notes: payload.notes || '',
+    joined_at: serverTimestamp(),
+  }
 
-  if (events?.length) {
-    await must(
-      supabase.from('attendance_records').insert(
-        events.map((event) => ({
+  await setDoc(newDoc, travelerData)
+
+  // Initialize attendance records for existing events
+  const eventsSnap = await getDocs(collection(db, 'groups', groupId, 'attendance_events'))
+  if (!eventsSnap.empty) {
+    await Promise.all(
+      eventsSnap.docs.map(async (eDoc) => {
+        const recordRef = doc(db, 'groups', groupId, 'attendance_records', `${eDoc.id}_${newDoc.id}`)
+        await setDoc(recordRef, {
           group_id: groupId,
-          event_id: event.id,
-          participant_id: traveler.id,
+          event_id: eDoc.id,
+          participant_id: newDoc.id,
           arrived: false,
-        })),
-      ),
+        })
+      }),
     )
   }
 
-  return toParticipant(traveler)
+  return toParticipant(newDoc.id, {
+    ...travelerData,
+    joined_at: new Date(),
+  })
 }
 
+/**
+ * 移出團員
+ */
 export async function removeTraveler(groupId, participantId) {
-  await must(
-    supabase
-      .from('participants')
-      .delete()
-      .eq('id', participantId)
-      .eq('group_id', groupId),
+  const travelerRef = doc(db, 'groups', groupId, 'participants', participantId)
+  await deleteDoc(travelerRef)
+
+  // Remove attendance records for this traveler
+  const recordsSnap = await getDocs(
+    query(collection(db, 'groups', groupId, 'attendance_records'), where('participant_id', '==', participantId)),
   )
+  await Promise.all(recordsSnap.docs.map((d) => deleteDoc(d.ref)))
 
   return true
 }
 
+/**
+ * 發布公告
+ */
 export async function addAnnouncement(groupId, payload) {
-  const row = await must(
-    supabase
-      .from('announcements')
-      .insert({
-        group_id: groupId,
-        title: payload.title,
-        content: payload.content,
-        pinned: Boolean(payload.pinned),
-      })
-      .select('id,title,content,pinned,published_at')
-      .single(),
-  )
+  const annRef = collection(db, 'groups', groupId, 'announcements')
+  const newDoc = doc(annRef)
 
-  return toAnnouncement(row)
+  const annData = {
+    title: payload.title,
+    content: payload.content,
+    pinned: Boolean(payload.pinned),
+    published_at: serverTimestamp(),
+  }
+
+  await setDoc(newDoc, annData)
+
+  return toAnnouncement(newDoc.id, {
+    ...annData,
+    published_at: new Date(),
+  })
 }
 
+/**
+ * 新增行程項目
+ */
 export async function addItineraryItem(groupId, payload) {
-  const row = await must(
-    supabase
-      .from('itinerary_items')
-      .insert({
-        group_id: groupId,
-        item_date: payload.date,
-        item_time: payload.time,
-        title: payload.title,
-        location: payload.location,
-        description: payload.description || '',
-      })
-      .select('id,item_date,item_time,title,location,description,created_at')
-      .single(),
-  )
+  const itinRef = collection(db, 'groups', groupId, 'itinerary')
+  const newDoc = doc(itinRef)
 
-  return toItineraryItem(row)
+  const itemData = {
+    item_date: payload.date,
+    item_time: payload.time,
+    title: payload.title,
+    location: payload.location,
+    description: payload.description || '',
+    created_at: serverTimestamp(),
+  }
+
+  await setDoc(newDoc, itemData)
+
+  return toItineraryItem(newDoc.id, {
+    ...itemData,
+    created_at: new Date(),
+  })
 }
 
+/**
+ * 批量新增行程項目
+ */
 export async function addMultipleItineraryItems(groupId, items) {
   if (!items || items.length === 0) return []
-  const rows = await must(
-    supabase
-      .from('itinerary_items')
-      .insert(
-        items.map((item) => ({
-          group_id: groupId,
-          item_date: item.date,
-          item_time: item.time,
-          title: item.title,
-          location: item.location || '',
-          description: item.description || '',
-        })),
-      )
-      .select('id,item_date,item_time,title,location,description,created_at'),
-  )
 
-  return (rows || []).map(toItineraryItem)
-}
-
-export async function deleteItineraryItem(groupId, itemId) {
-  await must(
-    supabase
-      .from('itinerary_items')
-      .delete()
-      .eq('id', itemId)
-      .eq('group_id', groupId),
-  )
-  return true
-}
-
-export async function addPhoto(groupId, payload) {
-  const file = payload.file
-  const ext = file.name?.split('.').pop() || 'jpg'
-  const path = `${groupId}/${Date.now()}_${randomSuffix()}.${ext}`
-
-  await must(
-    supabase.storage.from('group-photos').upload(path, file, {
-      cacheControl: '3600',
-      upsert: false,
+  const created = await Promise.all(
+    items.map(async (item) => {
+      const itinRef = collection(db, 'groups', groupId, 'itinerary')
+      const newDoc = doc(itinRef)
+      const itemData = {
+        item_date: item.date,
+        item_time: item.time,
+        title: item.title,
+        location: item.location || '',
+        description: item.description || '',
+        created_at: serverTimestamp(),
+      }
+      await setDoc(newDoc, itemData)
+      return toItineraryItem(newDoc.id, { ...itemData, created_at: new Date() })
     }),
   )
 
-  const { data: publicData } = supabase.storage.from('group-photos').getPublicUrl(path)
-
-  const row = await must(
-    supabase
-      .from('photos')
-      .insert({
-        group_id: groupId,
-        participant_id: payload.participantId || null,
-        title: payload.title,
-        image_url: publicData.publicUrl,
-        storage_path: path,
-      })
-      .select('id,participant_id,title,image_url,uploaded_at')
-      .single(),
-  )
-
-  return toPhoto(row)
+  return created
 }
 
+/**
+ * 刪除行程項目
+ */
+export async function deleteItineraryItem(groupId, itemId) {
+  const itemRef = doc(db, 'groups', groupId, 'itinerary', itemId)
+  await deleteDoc(itemRef)
+  return true
+}
+
+/**
+ * 上傳照片至 Firebase Storage 並記錄於 Firestore
+ */
+export async function addPhoto(groupId, payload) {
+  const file = payload.file
+  const ext = file.name?.split('.').pop() || 'jpg'
+  const path = `group-photos/${groupId}/${Date.now()}_${randomSuffix()}.${ext}`
+
+  const storageRef = ref(storage, path)
+  await uploadBytes(storageRef, file, {
+    contentType: file.type || 'image/jpeg',
+  })
+
+  const downloadUrl = await getDownloadURL(storageRef)
+
+  const photosRef = collection(db, 'groups', groupId, 'photos')
+  const newDoc = doc(photosRef)
+
+  const photoData = {
+    participant_id: payload.participantId || null,
+    title: payload.title,
+    image_url: downloadUrl,
+    storage_path: path,
+    uploaded_at: serverTimestamp(),
+  }
+
+  await setDoc(newDoc, photoData)
+
+  return toPhoto(newDoc.id, {
+    ...photoData,
+    uploaded_at: new Date(),
+  })
+}
+
+/**
+ * 建立點名活動
+ */
 export async function addAttendanceEvent(groupId, payload) {
-  const event = await must(
-    supabase
-      .from('attendance_events')
-      .insert({
-        group_id: groupId,
-        title: payload.title,
-      })
-      .select('id,title,created_at')
-      .single(),
-  )
+  const eventsRef = collection(db, 'groups', groupId, 'attendance_events')
+  const newDoc = doc(eventsRef)
 
-  const participants = await must(
-    supabase.from('participants').select('id').eq('group_id', groupId),
-  )
+  const eventData = {
+    title: payload.title,
+    created_at: serverTimestamp(),
+  }
 
-  if (participants?.length) {
-    await must(
-      supabase.from('attendance_records').insert(
-        participants.map((participant) => ({
+  await setDoc(newDoc, eventData)
+
+  const participantsSnap = await getDocs(collection(db, 'groups', groupId, 'participants'))
+  if (!participantsSnap.empty) {
+    await Promise.all(
+      participantsSnap.docs.map(async (pDoc) => {
+        const recordRef = doc(db, 'groups', groupId, 'attendance_records', `${newDoc.id}_${pDoc.id}`)
+        await setDoc(recordRef, {
           group_id: groupId,
-          event_id: event.id,
-          participant_id: participant.id,
+          event_id: newDoc.id,
+          participant_id: pDoc.id,
           arrived: false,
-        })),
-      ),
+        })
+      }),
     )
   }
 
   return {
-    id: event.id,
-    title: event.title,
-    createdAt: event.created_at,
+    id: newDoc.id,
+    title: payload.title,
+    createdAt: new Date().toISOString(),
     records: {},
   }
 }
 
+/**
+ * 簽到打卡 / 更新點名狀態
+ */
 export async function setAttendanceStatus(groupId, eventId, travelerId, arrived) {
-  const existing = await must(
-    supabase
-      .from('attendance_records')
-      .select('id')
-      .eq('group_id', groupId)
-      .eq('event_id', eventId)
-      .eq('participant_id', travelerId)
-      .maybeSingle(),
+  const recordRef = doc(db, 'groups', groupId, 'attendance_records', `${eventId}_${travelerId}`)
+  await setDoc(
+    recordRef,
+    {
+      group_id: groupId,
+      event_id: eventId,
+      participant_id: travelerId,
+      arrived: Boolean(arrived),
+    },
+    { merge: true },
   )
-
-  if (existing?.id) {
-    await must(
-      supabase
-        .from('attendance_records')
-        .update({ arrived: Boolean(arrived) })
-        .eq('id', existing.id),
-    )
-  } else {
-    await must(
-      supabase.from('attendance_records').insert({
-        group_id: groupId,
-        event_id: eventId,
-        participant_id: travelerId,
-        arrived: Boolean(arrived),
-      }),
-    )
-  }
 
   return true
 }
@@ -488,7 +467,7 @@ export function storeParticipantId(groupId, participantId) {
   try {
     window.localStorage.setItem(participantStorageKey(groupId), participantId)
   } catch {
-    // localStorage unavailable (private mode, etc.) - ignore, feature degrades gracefully
+    // ignore
   }
 }
 
