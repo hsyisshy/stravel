@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { chatTourAssistantAI, hasGeminiApiKey } from '../lib/gemini'
-import GeminiApiKeyModal from './GeminiApiKeyModal'
+import { chatTourAssistantAI } from '../lib/gemini'
 
 export default function AiAssistantDrawer({ group }) {
   const [isOpen, setIsOpen] = useState(false)
@@ -13,7 +12,6 @@ export default function AiAssistantDrawer({ group }) {
   ])
   const [inputValue, setInputValue] = useState('')
   const [loading, setLoading] = useState(false)
-  const [showKeyModal, setShowKeyModal] = useState(false)
   const [readingId, setReadingId] = useState(null)
   const messagesEndRef = useRef(null)
 
@@ -35,11 +33,6 @@ export default function AiAssistantDrawer({ group }) {
     const query = (textToSend || inputValue).trim()
     if (!query || loading) return
 
-    if (!hasGeminiApiKey()) {
-      setShowKeyModal(true)
-      return
-    }
-
     const userMsg = { id: String(Date.now()), role: 'user', text: query }
     setMessages((prev) => [...prev, userMsg])
     setInputValue('')
@@ -60,7 +53,7 @@ export default function AiAssistantDrawer({ group }) {
       const errorMsg = {
         id: String(Date.now() + 1),
         role: 'assistant',
-        text: `⚠️ 抱歉，回答時發生錯誤：${err.message || '連線逾時'}，請確認 Gemini API Key 設定或稍後再試。`,
+        text: `⚠️ 抱歉，回答時發生錯誤：${err.message || '連線逾時'}，請稍後再試。`,
       }
       setMessages((prev) => [...prev, errorMsg])
     } finally {
@@ -119,13 +112,6 @@ export default function AiAssistantDrawer({ group }) {
                 </div>
               </div>
               <div className="flex items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => setShowKeyModal(true)}
-                  className="rounded-lg bg-white/10 px-2 py-1 text-[11px] text-white/80 hover:bg-white/20"
-                >
-                  ⚙️ Key
-                </button>
                 <button
                   type="button"
                   onClick={() => setIsOpen(false)}
@@ -223,8 +209,6 @@ export default function AiAssistantDrawer({ group }) {
           </div>
         </div>
       )}
-
-      <GeminiApiKeyModal isOpen={showKeyModal} onClose={() => setShowKeyModal(false)} />
     </>
   )
 }

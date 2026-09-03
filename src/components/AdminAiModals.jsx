@@ -1,12 +1,6 @@
 import { useState } from 'react'
-import {
-  generateItineraryAI,
-  replanItineraryAI,
-  draftAnnouncementAI,
-  hasGeminiApiKey,
-} from '../lib/gemini'
+import { generateItineraryAI, replanItineraryAI, draftAnnouncementAI } from '../lib/gemini'
 import { addMultipleItineraryItems, addAnnouncement } from '../lib/storage'
-import GeminiApiKeyModal from './GeminiApiKeyModal'
 
 /**
  * 1. AI 行程規劃與動態調程 Modal
@@ -21,7 +15,6 @@ export function AiItineraryModal({ isOpen, onClose, group, onApplied }) {
   const [error, setError] = useState('')
   const [generatedItems, setGeneratedItems] = useState([])
   const [replanResult, setReplanResult] = useState(null)
-  const [showKeyModal, setShowKeyModal] = useState(false)
   const [applying, setApplying] = useState(false)
 
   if (!isOpen) return null
@@ -34,11 +27,6 @@ export function AiItineraryModal({ isOpen, onClose, group, onApplied }) {
   ]
 
   async function handleGenerate() {
-    if (!hasGeminiApiKey()) {
-      setShowKeyModal(true)
-      return
-    }
-
     setLoading(true)
     setError('')
     try {
@@ -311,7 +299,6 @@ export function AiItineraryModal({ isOpen, onClose, group, onApplied }) {
           </div>
         )}
       </div>
-      <GeminiApiKeyModal isOpen={showKeyModal} onClose={() => setShowKeyModal(false)} />
     </div>
   )
 }
@@ -325,7 +312,6 @@ export function AiAnnouncementModal({ isOpen, onClose, group, onDraftReady }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [result, setResult] = useState(null)
-  const [showKeyModal, setShowKeyModal] = useState(false)
 
   if (!isOpen) return null
 
@@ -340,11 +326,6 @@ export function AiAnnouncementModal({ isOpen, onClose, group, onDraftReady }) {
   async function handleDraft() {
     if (!rawTopic.trim()) {
       setError('請輸入公告重點或關鍵字')
-      return
-    }
-
-    if (!hasGeminiApiKey()) {
-      setShowKeyModal(true)
       return
     }
 
@@ -467,7 +448,6 @@ export function AiAnnouncementModal({ isOpen, onClose, group, onDraftReady }) {
           </div>
         )}
       </div>
-      <GeminiApiKeyModal isOpen={showKeyModal} onClose={() => setShowKeyModal(false)} />
     </div>
   )
 }

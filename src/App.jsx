@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { Link, NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { APIProvider } from '@vis.gl/react-google-maps'
 import HomePage from './pages/HomePage'
@@ -7,9 +6,8 @@ import NewGroupPage from './pages/NewGroupPage'
 import AdminGroupDetailPage from './pages/AdminGroupDetailPage'
 import GroupJoinPage from './pages/GroupJoinPage'
 import GroupPublicPage from './pages/GroupPublicPage'
-import GeminiApiKeyModal from './components/GeminiApiKeyModal'
 
-function Shell({ bare, onOpenKeyModal, children }) {
+function Shell({ bare, children }) {
   if (bare) {
     return (
       <div className="min-h-screen bg-slate-50 text-slate-800">
@@ -57,13 +55,6 @@ function Shell({ bare, onOpenKeyModal, children }) {
             >
               團體管理
             </NavLink>
-            <button
-              type="button"
-              onClick={onOpenKeyModal}
-              className="flex items-center gap-1 rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-bold text-indigo-700 hover:bg-indigo-100 transition"
-            >
-              <span>✨ AI 設定</span>
-            </button>
           </nav>
         </header>
       </div>
@@ -74,12 +65,11 @@ function Shell({ bare, onOpenKeyModal, children }) {
 
 function App() {
   const location = useLocation()
-  const [showKeyModal, setShowKeyModal] = useState(false)
   const isTravelerRoute = location.pathname.startsWith('/group/')
 
   return (
     <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
-      <Shell bare={isTravelerRoute} onOpenKeyModal={() => setShowKeyModal(true)}>
+      <Shell bare={isTravelerRoute}>
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/admin/groups" element={<AdminGroupsPage />} />
@@ -97,7 +87,6 @@ function App() {
           />
         </Routes>
       </Shell>
-      <GeminiApiKeyModal isOpen={showKeyModal} onClose={() => setShowKeyModal(false)} />
     </APIProvider>
   )
 }

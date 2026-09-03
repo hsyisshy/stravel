@@ -19,7 +19,6 @@ import {
 } from '../lib/storage'
 import LocationPicker from '../components/LocationPicker'
 import { AiItineraryModal, AiAnnouncementModal } from '../components/AdminAiModals'
-import GeminiApiKeyModal from '../components/GeminiApiKeyModal'
 
 const tabs = [
   { key: 'travelers', label: '團員名單' },
@@ -61,7 +60,6 @@ function AdminGroupDetailPage() {
   // AI Modal States
   const [showAiItineraryModal, setShowAiItineraryModal] = useState(false)
   const [showAiAnnouncementModal, setShowAiAnnouncementModal] = useState(false)
-  const [showApiKeyModal, setShowApiKeyModal] = useState(false)
 
   useEffect(() => {
     async function loadGroup() {
@@ -260,13 +258,6 @@ function AdminGroupDetailPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setShowApiKeyModal(true)}
-            className="flex items-center gap-1.5 rounded-xl border border-indigo-200 bg-indigo-50 px-3.5 py-2 text-xs font-bold text-indigo-700 hover:bg-indigo-100 transition"
-          >
-            <span>✨ Gemini AI 設定</span>
-          </button>
           <Link
             to={`/group/${group.id}`}
             className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:border-slate-400"
@@ -850,11 +841,6 @@ function AdminGroupDetailPage() {
         onClose={() => setShowAiAnnouncementModal(false)}
         group={group}
         onDraftReady={(draft) => setAnnouncementForm(draft)}
-      />
-
-      <GeminiApiKeyModal
-        isOpen={showApiKeyModal}
-        onClose={() => setShowApiKeyModal(false)}
       />
     </div>
   )

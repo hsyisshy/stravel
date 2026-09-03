@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { narrateLandmarkAI, hasGeminiApiKey } from '../lib/gemini'
-import GeminiApiKeyModal from './GeminiApiKeyModal'
+import { narrateLandmarkAI } from '../lib/gemini'
 
 export default function AiTourGuideView({ group }) {
   const [selectedImage, setSelectedImage] = useState(null)
@@ -11,7 +10,6 @@ export default function AiTourGuideView({ group }) {
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
   const [isPlayingAudio, setIsPlayingAudio] = useState(false)
-  const [showKeyModal, setShowKeyModal] = useState(false)
   const fileInputRef = useRef(null)
   const synthRef = useRef(null)
 
@@ -50,11 +48,6 @@ export default function AiTourGuideView({ group }) {
     const targetLoc = customLocation || locationName
     if (!selectedImage && !targetLoc && !userQuestion) {
       setError('請先拍照/上傳景點照片，或輸入景點名稱！')
-      return
-    }
-
-    if (!hasGeminiApiKey()) {
-      setShowKeyModal(true)
       return
     }
 
@@ -122,13 +115,6 @@ export default function AiTourGuideView({ group }) {
               隨手拍照或點選景點，由 Gemini 為你說故事、講歷史與最佳拍照點
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => setShowKeyModal(true)}
-            className="rounded-xl border border-white/20 bg-white/10 px-2.5 py-1.5 text-[11px] font-semibold backdrop-blur-sm hover:bg-white/20"
-          >
-            ⚙️ 設定 Key
-          </button>
         </div>
       </div>
 
@@ -331,8 +317,6 @@ export default function AiTourGuideView({ group }) {
           </div>
         </div>
       )}
-
-      <GeminiApiKeyModal isOpen={showKeyModal} onClose={() => setShowKeyModal(false)} />
     </div>
   )
 }

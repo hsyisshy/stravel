@@ -1,7 +1,6 @@
 import { useRef, useState } from 'react'
 import { addPhoto, formatDateTime } from '../lib/storage'
-import { generateTravelStoryAI, hasGeminiApiKey } from '../lib/gemini'
-import GeminiApiKeyModal from './GeminiApiKeyModal'
+import { generateTravelStoryAI } from '../lib/gemini'
 
 function PhotoGalleryView({ group, participantId, onUploaded }) {
   const [tab, setTab] = useState('shared')
@@ -11,7 +10,6 @@ function PhotoGalleryView({ group, participantId, onUploaded }) {
   const [storyResult, setStoryResult] = useState(null)
   const [storyModalOpen, setStoryModalOpen] = useState(false)
   const [storyTone, setStoryTone] = useState('感人溫馨')
-  const [showKeyModal, setShowKeyModal] = useState(false)
   const [copiedCaption, setCopiedCaption] = useState(false)
   const fileInputRef = useRef(null)
 
@@ -40,11 +38,6 @@ function PhotoGalleryView({ group, participantId, onUploaded }) {
   }
 
   async function handleGenerateStory() {
-    if (!hasGeminiApiKey()) {
-      setShowKeyModal(true)
-      return
-    }
-
     setIsGeneratingStory(true)
     setUploadError('')
     try {
@@ -58,7 +51,7 @@ function PhotoGalleryView({ group, participantId, onUploaded }) {
       setStoryModalOpen(true)
     } catch (err) {
       console.error(err)
-      setUploadError(err.message || '生成回憶錄失敗，請確認 API Key 設定')
+      setUploadError(err.message || '生成回憶錄失敗，請稍後再試')
     } finally {
       setIsGeneratingStory(false)
     }
@@ -265,8 +258,6 @@ function PhotoGalleryView({ group, participantId, onUploaded }) {
           </div>
         </div>
       )}
-
-      <GeminiApiKeyModal isOpen={showKeyModal} onClose={() => setShowKeyModal(false)} />
     </div>
   )
 }
