@@ -8,7 +8,7 @@ export default function AiAssistantDrawer({ group }) {
     {
       id: 'welcome',
       role: 'assistant',
-      text: `您好！我是本團的「Stravel 隨行 AI 領隊小幫手」✨\n有任何集合時間、行程規劃或旅行問題，隨時都可以問我喔！`,
+      text: `您好！我是本團的「遊點易思隨行 AI 領隊小幫手」✨\n有任何集合時間、行程規劃或旅行問題，隨時都可以問我喔！`,
     },
   ])
   const [inputValue, setInputValue] = useState('')

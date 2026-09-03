@@ -25,9 +25,9 @@ function Shell({ bare, onOpenKeyModal, children }) {
         <header className="relative mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-4">
           <Link to="/" className="flex items-center gap-2 text-lg font-black tracking-tight text-slate-900">
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-900 text-white text-xs">
-              S
+              遊
             </span>
-            <span>Stravel Ops</span>
+            <span>遊點易思</span>
             <span className="rounded-full bg-gradient-to-r from-cyan-600 to-indigo-600 px-2 py-0.5 text-[10px] font-bold text-white shadow-xs">
               Gemini AI
             </span>

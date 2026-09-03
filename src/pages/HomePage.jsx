@@ -53,7 +53,7 @@ function HomePage() {
           </h1>
 
           <p className="text-base text-slate-600 leading-relaxed">
-            Stravel 結合 <strong>Google Gemini 多模態生成式 AI</strong>、<strong>Google Maps 智慧電子圍籬</strong> 與 <strong>即時團務協作</strong>，為領隊解決重複問答與突發調程痛點，為旅客打造專屬隨身 AI 導遊與回憶錄。
+            遊點易思結合 <strong>Google Gemini 多模態生成式 AI</strong>、<strong>Google Maps 智慧電子圍籬</strong> 與 <strong>即時團務協作</strong>，為領隊解決重複問答與突發調程痛點，為旅客打造專屬隨身 AI 導遊與回憶錄。
           </p>
 
           <div className="flex flex-wrap items-center gap-3 pt-3">

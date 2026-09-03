@@ -241,7 +241,7 @@ export async function narrateLandmarkAI({ imageBase64, mimeType = 'image/jpeg', 
 export async function chatTourAssistantAI({ message, history = [], groupContext }) {
   const ai = getAiClient()
 
-  const contextPrompt = `你是在地專業「Stravel 智慧隨行領隊小幫手」。你正在為「${groupContext?.name || '旅遊團'}」的團員提供 24 小時貼心解答。
+  const contextPrompt = `你是在地專業「遊點易思智慧隨行領隊小幫手」。你正在為「${groupContext?.name || '旅遊團'}」的團員提供 24 小時貼心解答。
 
 【當前團務即時資訊 (Grounding Data)】
 - 團名：${groupContext?.name || '-'}
@@ -262,7 +262,7 @@ ${(groupContext?.itinerary || []).map((i) => `• ${i.date} ${i.time} - ${i.titl
 
   const contents = [
     { role: 'user', parts: [{ text: '你好！我是本團團員。' }] },
-    { role: 'model', parts: [{ text: `您好！我是您的 Stravel 隨行 AI 領隊小幫手 😊 很高興為您服務！無論是集合時間、行程詢問或是景點建議，隨時都可以問我喔！` }] },
+    { role: 'model', parts: [{ text: `您好！我是您的遊點易思隨行 AI 領隊小幫手 😊 很高興為您服務！無論是集合時間、行程詢問或是景點建議，隨時都可以問我喔！` }] },
   ]
 
   for (const h of history) {

@@ -27,7 +27,7 @@ const demoPresets = [
     safetyRadiusM: 250,
     guideName: '陳大衛 (David)',
     guidePhone: '0912-345-678',
-    notes: '• 請攜帶保暖外套與舒適健走鞋\n• 自由活動時間請隨身開啟 Stravel 智慧定位\n• 景點寺廟內請遵守拍照禮儀',
+    notes: '• 請攜帶保暖外套與舒適健走鞋\n• 自由活動時間請隨身開啟遊點易思智慧定位\n• 景點寺廟內請遵守拍照禮儀',
   },
   {
     name: '【親子生態】宜蘭礁溪溫泉與傳藝文化 2 日遊',
