@@ -79,27 +79,42 @@ function createAdminToken() {
   return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')
 }
 
+const ADMIN_GROUPS_KEY = 'stravel:admin_groups'
+
+function getLocalAdminGroupRefs() {
+  try {
+    const raw = window.localStorage.getItem(ADMIN_GROUPS_KEY)
+    return raw ? JSON.parse(raw) : []
+  } catch {
+    return []
+  }
+}
+
+function addLocalAdminGroupRef(ref) {
+  try {
+    const refs = getLocalAdminGroupRefs()
+    if (refs.some((r) => r.id === ref.id)) return
+    window.localStorage.setItem(ADMIN_GROUPS_KEY, JSON.stringify([ref, ...refs]))
+  } catch {
+    // ignore
+  }
+}
 
 /**
- * 取得所有團體列表
+ * 取得此瀏覽器建立過的團體列表（不再對 Firestore 做全庫 list，避免洩漏其他團的 admin token）
  */
-export async function getGroups() {
-  const groupsRef = collection(db, 'groups')
-  const q = query(groupsRef, orderBy('departure_date', 'asc'))
-  const snapshot = await getDocs(q)
-
-  const groupList = await Promise.all(
-    snapshot.docs.map(async (docSnap) => {
-      const gData = docSnap.data()
-      const participantsSnap = await getDocs(collection(db, 'groups', docSnap.id, 'participants'))
-      return {
-        ...toCamelGroup(docSnap.id, gData),
-        travelers: participantsSnap.docs.map((p) => toParticipant(p.id, p.data())),
+export async function getMyGroups() {
+  const refs = getLocalAdminGroupRefs()
+  const groups = await Promise.all(
+    refs.map(async (ref) => {
+      try {
+        return await getGroupById(ref.id)
+      } catch {
+        return null
       }
     }),
   )
-
-  return groupList
+  return groups.filter(Boolean)
 }
 
 /**
@@ -176,6 +191,7 @@ export async function createGroup(payload) {
   }
 
   await setDoc(newDoc, groupData)
+  addLocalAdminGroupRef({ id: newDoc.id })
 
   return toCamelGroup(newDoc.id, {
     ...groupData,

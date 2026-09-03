@@ -3,13 +3,13 @@ import { getFirestore } from 'firebase/firestore'
 import { getStorage } from 'firebase/storage'
 
 export const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'AIzaSyCFVFYFiA-mgr68qIHwrSBPdCX6gto-61Q',
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'fir-travel-ed41b.firebaseapp.com',
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'fir-travel-ed41b',
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'fir-travel-ed41b.firebasestorage.app',
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '4208320574',
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || '1:4208320574:web:4163955d8b08bf7642716f',
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || 'G-27NDTE4H4R',
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'AIzaSyCkdQhdXcIzrNVRCntLLduZGU0OpYXdCO4',
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'fir-travel-51872.firebaseapp.com',
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'fir-travel-51872',
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'fir-travel-51872.firebasestorage.app',
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '39211497808',
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || '1:39211497808:web:bc1a1db443e733eb15d455',
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || 'G-5PERYMSDXX',
 }
 
 export const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig)

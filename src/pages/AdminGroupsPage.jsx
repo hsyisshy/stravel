@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { formatDate, getGroups } from '../lib/storage'
+import { formatDate, getMyGroups } from '../lib/storage'
 
 function AdminGroupsPage() {
   const [groups, setGroups] = useState([])
@@ -12,7 +12,7 @@ function AdminGroupsPage() {
       setLoading(true)
       setError('')
       try {
-        const data = await getGroups()
+        const data = await getMyGroups()
         setGroups(data)
       } catch (err) {
         setError(err.message || '讀取團體失敗')
@@ -29,7 +29,9 @@ function AdminGroupsPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-3xl font-black tracking-tight text-slate-900">團體列表</h1>
-          <p className="mt-1 text-sm text-slate-500">管理所有旅遊團體與旅客狀態。</p>
+          <p className="mt-1 text-sm text-slate-500">
+            此瀏覽器建立過的旅遊團體。換裝置或清除瀏覽資料後，請改用建團時取得的管理連結進入。
+          </p>
         </div>
         <Link
           to="/admin/groups/new"
@@ -68,7 +70,7 @@ function AdminGroupsPage() {
             {!loading && !error && groups.length === 0 && (
               <tr>
                 <td className="px-4 py-10 text-center text-slate-400" colSpan={5}>
-                  目前沒有團體，先新增一個吧。
+                  此瀏覽器尚未建立過團體，先新增一個吧。
                 </td>
               </tr>
             )}

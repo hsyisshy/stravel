@@ -1,0 +1,59 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /groups/{groupId} {
+      // 沒有 Firebase Auth，admin_token 是前端比對而非伺服器驗證，
+      // 所以這裡只能防「大量枚舉」，防不了「已知單一 groupId 的讀取」。
+      allow get: if true;
+      allow list: if false;
+      allow create: if true;
+      allow update: if request.resource.data.admin_token == resource.data.admin_token
+                    && request.resource.data.created_at == resource.data.created_at;
+      allow delete: if false;
+
+      match /participants/{participantId} {
+        allow get, list: if true;
+        allow create: if true;
+        allow update: if false;
+        allow delete: if true;
+      }
+
+      match /announcements/{announcementId} {
+        allow get, list: if true;
+        allow create: if true;
+        allow update, delete: if false;
+      }
+
+      match /itinerary/{itemId} {
+        allow get, list: if true;
+        allow create: if true;
+        allow update: if false;
+        allow delete: if true;
+      }
+
+      match /photos/{photoId} {
+        allow get, list: if true;
+        allow create: if true;
+        allow update, delete: if false;
+      }
+
+      match /attendance_events/{eventId} {
+        allow get, list: if true;
+        allow create: if true;
+        allow update, delete: if false;
+      }
+
+      match /attendance_records/{recordId} {
+        allow get, list: if true;
+        allow create, update: if true;
+        allow delete: if true;
+      }
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
