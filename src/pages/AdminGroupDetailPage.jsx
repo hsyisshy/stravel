@@ -460,9 +460,9 @@ function AdminGroupDetailPage() {
                   <button
                     type="button"
                     onClick={() => setShowAiAnnouncementModal(true)}
-                    className="flex items-center gap-1 rounded-xl bg-gradient-to-r from-amber-500 to-indigo-600 px-3 py-1.5 text-xs font-bold text-white shadow hover:opacity-90 transition"
+                    className="rounded-lg border border-cyan-200 bg-cyan-50 px-3 py-1.5 text-xs font-semibold text-cyan-700 hover:bg-cyan-100 transition"
                   >
-                    <span>✨ AI 智慧草擬</span>
+                    AI 草擬
                   </button>
                 )}
               </div>
@@ -509,7 +509,7 @@ function AdminGroupDetailPage() {
               <button
                 type="submit"
                 disabled={!canEdit}
-                className="mt-4 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+                className="mt-4 rounded-lg bg-cyan-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 發布公告
               </button>
@@ -554,9 +554,9 @@ function AdminGroupDetailPage() {
                   <button
                     type="button"
                     onClick={() => setShowAiItineraryModal(true)}
-                    className="flex items-center gap-1 rounded-xl bg-gradient-to-r from-cyan-600 to-indigo-600 px-3 py-1.5 text-xs font-bold text-white shadow hover:opacity-90 transition"
+                    className="rounded-lg border border-cyan-200 bg-cyan-50 px-3 py-1.5 text-xs font-semibold text-cyan-700 hover:bg-cyan-100 transition"
                   >
-                    <span>✨ AI 排程 / 應變</span>
+                    AI 排程 / 應變
                   </button>
                 )}
               </div>
@@ -627,7 +627,7 @@ function AdminGroupDetailPage() {
               <button
                 type="submit"
                 disabled={!canEdit}
-                className="mt-4 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+                className="mt-4 rounded-lg bg-cyan-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 新增行程
               </button>
@@ -642,7 +642,7 @@ function AdminGroupDetailPage() {
                     onClick={() => setShowAiItineraryModal(true)}
                     className="text-xs font-bold text-cyan-700 hover:underline"
                   >
-                    ✨ AI 一鍵自動排程 / 應變調程
+                    AI 一鍵自動排程 / 應變調程
                   </button>
                 </div>
               </div>
@@ -719,7 +719,7 @@ function AdminGroupDetailPage() {
               <button
                 disabled={isUploadingPhoto || !canEdit}
                 type="submit"
-                className="mt-4 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="mt-4 rounded-lg bg-cyan-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isUploadingPhoto ? '上傳中...' : '上傳照片'}
               </button>
@@ -768,7 +768,7 @@ function AdminGroupDetailPage() {
               <button
                 type="submit"
                 disabled={!canEdit}
-                className="mt-4 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+                className="mt-4 rounded-lg bg-cyan-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 發起點名
               </button>

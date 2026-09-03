@@ -69,37 +69,22 @@ function BellIcon() {
 
 function HeaderLeft({ tab, groupName }) {
   if (tab === 'photos') {
-    return (
-      <span className="flex items-center gap-1.5 text-sm font-bold text-white">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
-          <path d="m15 18-6-6 6-6" />
-        </svg>
-        {groupName}
-      </span>
-    )
+    return <span className="text-sm font-semibold text-slate-900">{groupName}</span>
   }
 
   if (tab === 'guide') {
-    return (
-      <span className="flex items-center gap-1.5 text-xs font-bold text-white">
-        ✨ Gemini 多模態語音導覽
-      </span>
-    )
+    return <span className="text-xs font-semibold text-slate-500">Gemini 多模態語音導覽</span>
   }
 
   if (tab === 'rollcall') {
-    return (
-      <span className="flex items-center gap-1.5 text-xs font-bold text-white">
-        📋 快速 GPS 簽到
-      </span>
-    )
+    return <span className="text-xs font-semibold text-slate-500">快速 GPS 簽到</span>
   }
 
   return (
-    <span className="flex items-center gap-1.5 text-xs font-semibold text-white/90">
+    <span className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
       <span className="relative flex h-2 w-2">
-        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-300 opacity-75" />
-        <span className="relative inline-flex h-2 w-2 rounded-full bg-cyan-300" />
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75" />
+        <span className="relative inline-flex h-2 w-2 rounded-full bg-cyan-500" />
       </span>
       系統正持續追蹤定位中
     </span>
@@ -141,7 +126,7 @@ function GroupPublicPage() {
 
   if (loading || (group && !getStoredParticipantId(groupId))) {
     return (
-      <div className="mx-auto w-full max-w-xl rounded-2xl border border-slate-200 bg-white p-6 text-slate-600">
+      <div className="mx-auto w-full max-w-xl rounded-xl border border-slate-200 bg-white p-6 text-slate-600">
         讀取中...
       </div>
     )
@@ -149,7 +134,7 @@ function GroupPublicPage() {
 
   if (error) {
     return (
-      <div className="mx-auto w-full max-w-xl rounded-2xl border border-rose-200 bg-rose-50 p-6 text-rose-700">
+      <div className="mx-auto w-full max-w-xl rounded-xl border border-rose-200 bg-rose-50 p-6 text-rose-700">
         {error}
       </div>
     )
@@ -157,7 +142,7 @@ function GroupPublicPage() {
 
   if (!group) {
     return (
-      <div className="mx-auto w-full max-w-xl rounded-2xl border border-rose-200 bg-rose-50 p-6 text-rose-700">
+      <div className="mx-auto w-full max-w-xl rounded-xl border border-rose-200 bg-rose-50 p-6 text-rose-700">
         找不到團體。
       </div>
     )
@@ -170,14 +155,14 @@ function GroupPublicPage() {
 
   return (
     <div className="mx-auto w-full max-w-xl space-y-4 pb-16">
-      <section className="overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-b from-[#6d7f78] via-[#96a199] to-amber-100/70 p-4 shadow-sm">
-        <div className="relative flex items-center justify-between pb-4">
+      <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="relative flex items-center justify-between border-b border-slate-100 pb-4">
           <HeaderLeft tab={activeTab} groupName={group.name} />
 
           <button
             type="button"
             onClick={() => setShowInfoPanel((v) => !v)}
-            className="relative rounded-full bg-white/90 p-2 text-slate-800 shadow hover:bg-white transition"
+            className="relative rounded-full border border-slate-200 p-2 text-slate-600 hover:bg-slate-50"
             aria-label="公告與行程"
           >
             <BellIcon />
@@ -187,7 +172,7 @@ function GroupPublicPage() {
           </button>
 
           {showInfoPanel && (
-            <div className="absolute right-0 top-full z-30 mt-2 max-h-96 w-full overflow-y-auto rounded-2xl bg-white p-4 shadow-2xl border border-slate-200">
+            <div className="absolute right-0 top-full z-30 mt-2 max-h-96 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white p-4 shadow-lg">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-bold text-slate-900">公告與行程</h2>
                 <button
@@ -204,14 +189,14 @@ function GroupPublicPage() {
                   <h3 className="text-xs font-bold uppercase tracking-wide text-slate-400">公告</h3>
                   <div className="mt-2 space-y-2">
                     {announcements.length === 0 && (
-                      <p className="rounded-xl bg-slate-50 p-3 text-sm text-slate-400">目前沒有公告。</p>
+                      <p className="rounded-lg bg-slate-50 p-3 text-sm text-slate-400">目前沒有公告。</p>
                     )}
                     {announcements.map((a) => (
-                      <article key={a.id} className="rounded-xl border border-slate-200 p-3">
+                      <article key={a.id} className="rounded-lg border border-slate-200 p-3">
                         <div className="flex flex-wrap items-center gap-2">
                           <h4 className="text-sm font-bold text-slate-900">{a.title}</h4>
                           {a.pinned && (
-                            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">
+                            <span className="rounded border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700">
                               置頂
                             </span>
                           )}
@@ -227,10 +212,10 @@ function GroupPublicPage() {
                   <h3 className="text-xs font-bold uppercase tracking-wide text-slate-400">行程</h3>
                   <div className="mt-2 space-y-2">
                     {itineraryFeed.length === 0 && (
-                      <p className="rounded-xl bg-slate-50 p-3 text-sm text-slate-400">目前沒有行程資料。</p>
+                      <p className="rounded-lg bg-slate-50 p-3 text-sm text-slate-400">目前沒有行程資料。</p>
                     )}
                     {itineraryFeed.map((item) => (
-                      <article key={item.id} className="rounded-xl border border-slate-200 p-3">
+                      <article key={item.id} className="rounded-lg border border-slate-200 p-3">
                         <p className="text-xs font-semibold text-cyan-700">
                           {formatDate(item.date)} {item.time}
                         </p>
@@ -243,7 +228,7 @@ function GroupPublicPage() {
 
                 <div>
                   <h3 className="text-xs font-bold uppercase tracking-wide text-slate-400">團體資訊</h3>
-                  <div className="mt-2 grid gap-3 rounded-xl bg-slate-50 p-3 text-sm sm:grid-cols-2">
+                  <div className="mt-2 grid gap-3 rounded-lg bg-slate-50 p-3 text-sm sm:grid-cols-2">
                     <div>
                       <p className="text-slate-500">集合地點</p>
                       <p className="mt-0.5 font-semibold text-slate-900">{group.meetingPoint}</p>
@@ -262,7 +247,7 @@ function GroupPublicPage() {
         </div>
 
         {/* Tab Contents */}
-        <div>
+        <div className="pt-4">
           {activeTab === 'location' && <SmartLocationView group={group} />}
 
           {activeTab === 'rollcall' && (
@@ -285,7 +270,7 @@ function GroupPublicPage() {
         </div>
 
         {/* Bottom Navigation */}
-        <nav className="mt-4 space-y-2">
+        <nav className="mt-4 grid grid-cols-4 gap-1.5 border-t border-slate-100 pt-4">
           {navItems.map((item) => (
             <button
               key={item.key}
@@ -294,8 +279,10 @@ function GroupPublicPage() {
                 setActiveTab(item.key)
                 setShowInfoPanel(false)
               }}
-              className={`flex w-full items-center gap-3 rounded-full px-4 py-3 text-sm font-bold transition ${
-                activeTab === item.key ? 'bg-white text-slate-900 shadow' : 'bg-amber-100/90 text-slate-700 hover:bg-amber-100'
+              className={`flex flex-col items-center gap-1 rounded-lg px-2 py-2.5 text-xs font-semibold transition ${
+                activeTab === item.key
+                  ? 'bg-cyan-50 text-cyan-700'
+                  : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
               }`}
             >
               <NavIcon name={item.icon} />

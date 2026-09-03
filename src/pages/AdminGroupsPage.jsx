@@ -35,7 +35,7 @@ function AdminGroupsPage() {
         </div>
         <Link
           to="/admin/groups/new"
-          className="rounded-xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-cyan-500"
+          className="rounded-lg bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-cyan-700"
         >
           新增團體
         </Link>

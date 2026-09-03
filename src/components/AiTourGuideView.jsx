@@ -47,7 +47,7 @@ export default function AiTourGuideView({ group }) {
   async function handleGenerateGuide(customLocation) {
     const targetLoc = customLocation || locationName
     if (!selectedImage && !targetLoc && !userQuestion) {
-      setError('請先拍照/上傳景點照片，或輸入景點名稱！')
+      setError('請先拍照/上傳景點照片，或輸入景點名稱')
       return
     }
 
@@ -103,38 +103,33 @@ export default function AiTourGuideView({ group }) {
   return (
     <div className="space-y-4">
       {/* Banner Card */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-teal-700 via-cyan-800 to-indigo-900 p-4 text-white shadow-md">
-        <div className="absolute right-0 top-0 -mr-6 -mt-6 h-28 w-28 rounded-full bg-cyan-400/20 blur-xl" />
-        <div className="relative flex items-center justify-between">
-          <div>
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-cyan-400/20 px-2.5 py-0.5 text-[11px] font-bold text-cyan-200 backdrop-blur-sm">
-              <span>✨ Google Gemini Vision & Voice</span>
-            </div>
-            <h2 className="mt-1 text-base font-black tracking-tight">多模態隨身 AI 導遊</h2>
-            <p className="mt-0.5 text-xs text-cyan-100/90">
-              隨手拍照或點選景點，由 Gemini 為你說故事、講歷史與最佳拍照點
-            </p>
-          </div>
-        </div>
+      <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+        <span className="inline-block rounded border border-cyan-200 bg-white px-2 py-0.5 text-[11px] font-semibold text-cyan-700">
+          Gemini Vision
+        </span>
+        <h2 className="mt-1.5 text-sm font-bold text-slate-900">多模態隨身 AI 導遊</h2>
+        <p className="mt-0.5 text-xs text-slate-500">
+          拍照或選擇景點，由 Gemini 說明歷史故事與拍照建議
+        </p>
       </div>
 
       {error && (
-        <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700 font-medium">
+        <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-xs font-medium text-rose-700">
           {error}
         </div>
       )}
 
       {/* Input / Photo Section */}
-      <div className="rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-sm space-y-3.5">
+      <div className="space-y-3.5 rounded-xl border border-slate-200 bg-white p-4">
         <div className="flex items-center justify-between">
-          <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-            📸 拍照或上傳現場景點 / 文物 / 美食照片
+          <label className="text-xs font-semibold text-slate-800">
+            拍照或上傳現場景點 / 文物 / 美食照片
           </label>
           {imagePreview && (
             <button
               type="button"
               onClick={handleClearImage}
-              className="text-[11px] font-bold text-rose-600 hover:underline"
+              className="text-[11px] font-semibold text-rose-600 hover:underline"
             >
               清除照片
             </button>
@@ -142,18 +137,15 @@ export default function AiTourGuideView({ group }) {
         </div>
 
         {imagePreview ? (
-          <div className="relative h-44 w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-900/5">
+          <div className="relative h-44 w-full overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
             <img src={imagePreview} alt="景點預覽" className="h-full w-full object-contain" />
           </div>
         ) : (
           <div
             onClick={() => fileInputRef.current?.click()}
-            className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50/70 p-6 text-center transition hover:border-cyan-500 hover:bg-cyan-50/30 cursor-pointer"
+            className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 p-6 text-center transition hover:border-cyan-400 hover:bg-cyan-50/40"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-cyan-100 text-cyan-700 font-bold">
-              📷
-            </div>
-            <p className="text-xs font-bold text-slate-700">點擊拍照或從相簿選取照片</p>
+            <p className="text-xs font-semibold text-slate-700">點擊拍照或從相簿選取照片</p>
             <p className="text-[11px] text-slate-400">支援古蹟、招牌、建築、菜單、展覽品多模態辨識</p>
           </div>
         )}
@@ -169,11 +161,11 @@ export default function AiTourGuideView({ group }) {
 
         {/* Location presets & input */}
         <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1.5">
-            📍 或選擇本團行程景點 / 自訂地點
+          <label className="mb-1.5 block text-xs font-semibold text-slate-700">
+            或選擇本團行程景點 / 自訂地點
           </label>
           {itineraryLocations.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mb-2">
+            <div className="mb-2 flex flex-wrap gap-1.5">
               {itineraryLocations.map((loc) => (
                 <button
                   key={loc}
@@ -200,15 +192,15 @@ export default function AiTourGuideView({ group }) {
               placeholder="例如：清水寺、金閣寺、九份阿妹茶樓..."
               value={locationName}
               onChange={(e) => setLocationName(e.target.value)}
-              className="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:border-cyan-500 focus:outline-none"
+              className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:border-cyan-500 focus:outline-none"
             />
             <button
               type="button"
               disabled={loading}
               onClick={() => handleGenerateGuide()}
-              className="rounded-xl bg-gradient-to-r from-cyan-600 to-indigo-600 px-4 py-2 text-xs font-bold text-white shadow hover:opacity-95 disabled:opacity-50"
+              className="rounded-lg bg-cyan-600 px-4 py-2 text-xs font-semibold text-white hover:bg-cyan-700 disabled:opacity-50"
             >
-              {loading ? 'AI 導覽產生中...' : '✨ 開始導覽'}
+              {loading ? 'AI 導覽產生中...' : '開始導覽'}
             </button>
           </div>
         </div>
@@ -216,13 +208,13 @@ export default function AiTourGuideView({ group }) {
 
       {/* Result Display */}
       {result && (
-        <div className="rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-sm space-y-3.5 animate-fadeIn">
+        <div className="space-y-3.5 rounded-xl border border-slate-200 bg-white p-4">
           <div className="flex items-start justify-between gap-2 border-b border-slate-100 pb-3">
             <div>
-              <div className="inline-flex items-center gap-1 rounded bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800">
-                ⭐ 隨身景點百科
-              </div>
-              <h3 className="mt-1 text-base font-black text-slate-900">{result.landmarkName}</h3>
+              <span className="inline-block rounded border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-600">
+                隨身景點百科
+              </span>
+              <h3 className="mt-1 text-base font-bold text-slate-900">{result.landmarkName}</h3>
               {result.subtitle && (
                 <p className="text-xs font-medium text-cyan-700">{result.subtitle}</p>
               )}
@@ -234,65 +226,59 @@ export default function AiTourGuideView({ group }) {
               onClick={() =>
                 isPlayingAudio ? stopAudio() : playAudioStory(result.audioStory || result.summary)
               }
-              className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold shadow transition ${
+              className={`shrink-0 rounded-lg px-3 py-2 text-xs font-semibold transition ${
                 isPlayingAudio
-                  ? 'bg-rose-500 text-white animate-pulse'
-                  : 'bg-gradient-to-r from-cyan-600 to-teal-600 text-white hover:opacity-90'
+                  ? 'bg-rose-500 text-white'
+                  : 'bg-cyan-600 text-white hover:bg-cyan-700'
               }`}
             >
-              <span>{isPlayingAudio ? '⏹️ 停止朗讀' : '🔊 語音朗讀'}</span>
+              {isPlayingAudio ? '停止朗讀' : '語音朗讀'}
             </button>
           </div>
 
           {/* Quick Summary */}
-          <div className="rounded-xl bg-slate-50 p-3 text-xs text-slate-700 leading-relaxed">
-            <span className="font-bold text-slate-900">📌 景點速覽：</span>
+          <div className="rounded-lg bg-slate-50 p-3 text-xs leading-relaxed text-slate-700">
+            <span className="font-semibold text-slate-900">景點速覽：</span>
             {result.summary}
           </div>
 
           {/* Immersive Audio Story */}
           <div className="space-y-1">
-            <h4 className="text-xs font-bold text-slate-900 flex items-center gap-1">
-              🎙️ 導遊精彩解說故事
-            </h4>
-            <p className="whitespace-pre-line text-xs text-slate-600 leading-relaxed rounded-xl bg-cyan-50/50 p-3 border border-cyan-100">
+            <h4 className="text-xs font-semibold text-slate-900">導遊解說故事</h4>
+            <p className="whitespace-pre-line rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs leading-relaxed text-slate-600">
               {result.audioStory}
             </p>
           </div>
 
           {/* Fun Trivia & Photo Tips */}
-          <div className="grid gap-2.5 sm:grid-cols-2 text-xs">
+          <div className="grid gap-2.5 text-xs sm:grid-cols-2">
             {result.funTrivia && (
-              <div className="rounded-xl border border-amber-200 bg-amber-50/80 p-3">
-                <p className="font-bold text-amber-900 flex items-center gap-1">
-                  💡 你不知道的冷知識
-                </p>
-                <p className="mt-1 text-amber-800 leading-normal">{result.funTrivia}</p>
+              <div className="rounded-lg border border-slate-200 p-3">
+                <p className="font-semibold text-slate-900">冷知識</p>
+                <p className="mt-1 leading-normal text-slate-600">{result.funTrivia}</p>
               </div>
             )}
 
             {result.photoTips && (
-              <div className="rounded-xl border border-indigo-200 bg-indigo-50/80 p-3">
-                <p className="font-bold text-indigo-900 flex items-center gap-1">
-                  📸 絕佳拍照機位推薦
-                </p>
-                <p className="mt-1 text-indigo-800 leading-normal">{result.photoTips}</p>
+              <div className="rounded-lg border border-slate-200 p-3">
+                <p className="font-semibold text-slate-900">拍攝建議</p>
+                <p className="mt-1 leading-normal text-slate-600">{result.photoTips}</p>
               </div>
             )}
           </div>
 
           {/* Etiquette / Notices */}
           {result.etiquette && (
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-[11px] text-slate-600">
-              <span className="font-bold text-slate-800">⚠️ 參觀禮儀與貼心提醒：</span>
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-[11px] text-amber-800">
+              <span className="font-semibold">參觀禮儀與提醒：</span>
               {result.etiquette}
             </div>
           )}
 
           {/* Follow-up question */}
           <div className="border-t border-slate-100 pt-3">
-            <label className="block text-[11px] font-bold text-slate-700 mb-1">
-              💬 想再深入了解什麼？（問問隨身 AI 導遊）
+            <label className="mb-1 block text-[11px] font-semibold text-slate-700">
+              想再深入了解什麼？（問問隨身 AI 導遊）
             </label>
             <div className="flex gap-2">
               <input
@@ -303,13 +289,13 @@ export default function AiTourGuideView({ group }) {
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') handleGenerateGuide()
                 }}
-                className="flex-1 rounded-xl border border-slate-200 px-3 py-1.5 text-xs focus:border-cyan-500 focus:outline-none"
+                className="flex-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs focus:border-cyan-500 focus:outline-none"
               />
               <button
                 type="button"
                 disabled={loading}
                 onClick={() => handleGenerateGuide()}
-                className="rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-bold text-white hover:bg-slate-700 disabled:opacity-50"
+                className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-700 disabled:opacity-50"
               >
                 追問
               </button>

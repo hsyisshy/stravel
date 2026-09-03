@@ -18,26 +18,25 @@ function Shell({ bare, children }) {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800">
-      <div className="relative overflow-hidden border-b border-slate-200 bg-white/80 backdrop-blur-xl">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(14,116,144,0.12),transparent_40%),radial-gradient(circle_at_85%_10%,rgba(16,185,129,0.12),transparent_35%)]" />
-        <header className="relative mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-4">
-          <Link to="/" className="flex items-center gap-2 text-lg font-black tracking-tight text-slate-900">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-900 text-white text-xs">
+      <div className="border-b border-slate-200 bg-white">
+        <header className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-4">
+          <Link to="/" className="flex items-center gap-2.5 text-base font-bold tracking-tight text-slate-900">
+            <span className="flex h-7 w-7 items-center justify-center rounded-md bg-slate-900 text-xs text-white">
               遊
             </span>
             <span>遊點易思</span>
-            <span className="rounded-full bg-gradient-to-r from-cyan-600 to-indigo-600 px-2 py-0.5 text-[10px] font-bold text-white shadow-xs">
-              Gemini AI
+            <span className="rounded border border-cyan-200 bg-cyan-50 px-1.5 py-0.5 text-[10px] font-semibold text-cyan-700">
+              AI
             </span>
           </Link>
-          <nav className="flex items-center gap-2">
+          <nav className="flex items-center gap-1">
             <NavLink
               to="/"
               className={({ isActive }) =>
-                `rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold transition ${
+                `rounded-lg px-3 py-2 text-sm font-medium transition ${
                   isActive
-                    ? 'bg-slate-900 text-white'
-                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                    ? 'bg-slate-100 text-slate-900'
+                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                 }`
               }
             >
@@ -46,10 +45,10 @@ function Shell({ bare, children }) {
             <NavLink
               to="/admin/groups"
               className={({ isActive }) =>
-                `rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold transition ${
+                `rounded-lg px-3 py-2 text-sm font-medium transition ${
                   isActive
-                    ? 'bg-slate-900 text-white'
-                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                    ? 'bg-slate-100 text-slate-900'
+                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                 }`
               }
             >

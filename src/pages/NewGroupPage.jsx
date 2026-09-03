@@ -81,7 +81,7 @@ function NewGroupPage() {
 
         {/* Demo Fast Fill */}
         <div className="flex items-center gap-1.5">
-          <span className="text-[11px] font-bold text-slate-400">⚡ 快速套用示範資料：</span>
+          <span className="text-[11px] font-semibold text-slate-400">快速套用示範資料：</span>
           {demoPresets.map((p, idx) => (
             <button
               key={idx}
@@ -89,7 +89,7 @@ function NewGroupPage() {
               onClick={() => applyPreset(p)}
               className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 hover:border-cyan-500 hover:bg-cyan-50 hover:text-cyan-800 transition"
             >
-              {idx === 0 ? '🌸 京都賞楓團' : '🏞️ 宜蘭生態團'}
+              {idx === 0 ? '京都賞楓團' : '宜蘭生態團'}
             </button>
           ))}
         </div>
@@ -201,7 +201,7 @@ function NewGroupPage() {
           <button
             disabled={submitting}
             type="submit"
-            className="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-lg bg-cyan-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {submitting ? '建立中...' : '建立團體'}
           </button>

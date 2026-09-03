@@ -68,7 +68,7 @@ function SmartLocationView({ group }) {
             isOutside ? 'border border-rose-300 bg-rose-50 text-rose-700' : 'border border-emerald-300 bg-emerald-50 text-emerald-700'
           }`}
         >
-          {isOutside ? '⚠️ 您已脫離安全區域' : '✅ 您在安全區域內'}
+          {isOutside ? '您已脫離安全區域' : '您在安全區域內'}
           <span className="ml-2 font-normal">
             距離集合地點約 {distance >= 1000 ? `${(distance / 1000).toFixed(1)} 公里` : `${Math.round(distance)} 公尺`}
           </span>
