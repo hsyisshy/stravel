@@ -25,9 +25,6 @@ function Shell({ bare, children }) {
               遊
             </span>
             <span>遊點易思</span>
-            <span className="rounded border border-cyan-200 bg-cyan-50 px-1.5 py-0.5 text-[10px] font-semibold text-cyan-700">
-              AI
-            </span>
           </Link>
           <nav className="flex items-center gap-1">
             <NavLink
