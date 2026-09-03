@@ -46,7 +46,7 @@ async function generateItinerary(ai, { destination, days, departureDate, style, 
 2. 日期從 ${departureDate || '2026-09-01'} 起算連續 ${days || 1} 天。`
 
   const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
+    model: 'gemini-3.6-flash',
     contents: prompt,
     config: {
       temperature: 0.7,
@@ -94,7 +94,7 @@ ${JSON.stringify(currentItinerary || [], null, 2)}
 }`
 
   const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
+    model: 'gemini-3.6-flash',
     contents: prompt,
     config: {
       temperature: 0.6,
@@ -122,7 +122,7 @@ async function draftAnnouncement(ai, { rawTopic, category, groupInfo }) {
 }`
 
   const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
+    model: 'gemini-3.6-flash',
     contents: prompt,
     config: {
       temperature: 0.7,
@@ -171,7 +171,7 @@ async function narrateLandmark(ai, { imageBase64, mimeType = 'image/jpeg', locat
   contents.push(promptText)
 
   const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
+    model: 'gemini-3.6-flash',
     contents: contents,
     config: {
       systemInstruction: systemInstruction,
@@ -222,7 +222,7 @@ ${(groupContext?.itinerary || []).map((i) => `• ${i.date} ${i.time} - ${i.titl
   contents.push({ role: 'user', parts: [{ text: message }] })
 
   const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
+    model: 'gemini-3.6-flash',
     contents: contents,
     config: {
       systemInstruction: contextPrompt,
@@ -265,7 +265,7 @@ ${(itinerary || []).map((i) => `• ${i.date} ${i.title} (${i.location})`).join(
 }`
 
   const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
+    model: 'gemini-3.6-flash',
     contents: prompt,
     config: {
       temperature: 0.8,
