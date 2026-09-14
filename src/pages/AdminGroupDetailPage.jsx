@@ -858,7 +858,7 @@ function AdminGroupDetailPage() {
               <div>
                 <h2 className="text-xl font-bold text-slate-900">AI 行前風險評估</h2>
                 <p className="mt-1 text-sm text-slate-500">
-                  天氣預測、景點人潮預測、團費成本預估，由 Gemini 結合 Google 搜尋生成。
+                  天氣預測、景點人潮預測、團費成本預估，由 Gemini 依當地氣候與物價知識推理生成（非即時預報）。
                 </p>
               </div>
               {canEdit && (

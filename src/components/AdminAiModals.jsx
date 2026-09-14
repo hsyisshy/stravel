@@ -495,7 +495,7 @@ export function AiTripInsightsModal({ isOpen, onClose, group, onSaved }) {
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div>
             <h2 className="text-base font-bold text-slate-900">AI 行前風險評估</h2>
-            <p className="text-xs text-slate-400">天氣預測 / 人潮預測 / 成本預估（Gemini + Google 搜尋）</p>
+            <p className="text-xs text-slate-400">天氣預測 / 人潮預測 / 成本預估（Gemini 推理估算）</p>
           </div>
           <button
             type="button"

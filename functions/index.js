@@ -280,7 +280,7 @@ async function predictTripInsights(ai, { destination, days, departureDate, itine
     (itinerary || []).map((i) => `• ${i.date} ${i.time} - ${i.title} (${i.location})`).join('\n') ||
     '尚無詳細行程，請依目的地一般狀況評估'
 
-  const prompt = `你是一位資深旅遊風險顧問，擅長天氣、景點人潮與團費成本評估。請針對以下旅遊團，運用你能取得的最新公開資訊，提供行前風險評估。
+  const prompt = `你是一位資深旅遊風險顧問，擅長天氣、景點人潮與團費成本評估。請依據你對目的地的既有知識（當地當季氣候特徵、景點淡旺季規律、一般物價水準），針對以下旅遊團提供行前風險評估。
 
 【團體資訊】
 - 目的地/主軸：${destination}
@@ -291,7 +291,7 @@ ${itinerarySummary}
 - 領隊備註：${groupNotes || '無'}
 
 【任務】
-1. 天氣預測：針對出發日期起的每一天，給出天氣狀況、氣溫區間、對應的行程建議或提醒。若日期太遠無法取得精確預報，請依當地當季氣候特徵給出合理估計，並註明是「氣候估計」還是「即時預報」。
+1. 天氣預測：針對出發日期起的每一天，依當地當季氣候特徵給出天氣狀況估計、氣溫區間、對應的行程建議或提醒。這是氣候型態估計，並非即時天氣預報，confidence 欄位請固定填「氣候估計」。
 2. 人潮預測：針對行程中的主要景點，評估預期人潮擁擠程度（低/中/高）與建議應對方式（例如提早出發、預約時段）。
 3. 成本預估：依目的地、天數與行程內容，抓出這團大約的每人成本區間（交通、住宿、餐飲、活動門票），並附上簡短說明與幣別。
 
@@ -320,7 +320,7 @@ ${itinerarySummary}
     contents: prompt,
     config: {
       temperature: 0.4,
-      tools: [{ googleSearch: {} }],
+      responseMimeType: 'application/json',
     },
   })
 
