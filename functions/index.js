@@ -1,12 +1,8 @@
+import { onRequest } from 'firebase-functions/v2/https'
+import { defineSecret } from 'firebase-functions/params'
 import { GoogleGenAI } from '@google/genai'
 
-function getAiClient() {
-  const apiKey = process.env.GEMINI_API_KEY
-  if (!apiKey) {
-    throw new Error('伺服器尚未設定 GEMINI_API_KEY，請聯繫系統管理員。')
-  }
-  return new GoogleGenAI({ apiKey })
-}
+const GEMINI_API_KEY = defineSecret('GEMINI_API_KEY')
 
 function parseJsonResponse(text, errorMessage) {
   const cleaned = (text || '').trim().replace(/^```json\s*/, '').replace(/\s*```$/, '')
@@ -285,26 +281,29 @@ const actionHandlers = {
   generateTravelStory,
 }
 
-export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    res.status(405).json({ error: 'Method not allowed' })
-    return
-  }
+export const gemini = onRequest(
+  { secrets: [GEMINI_API_KEY], cors: true, region: 'asia-east1' },
+  async (req, res) => {
+    if (req.method !== 'POST') {
+      res.status(405).json({ error: 'Method not allowed' })
+      return
+    }
 
-  const { action, payload } = req.body || {}
-  const runAction = actionHandlers[action]
+    const { action, payload } = req.body || {}
+    const runAction = actionHandlers[action]
 
-  if (!runAction) {
-    res.status(400).json({ error: '未知的 AI 操作類型' })
-    return
-  }
+    if (!runAction) {
+      res.status(400).json({ error: '未知的 AI 操作類型' })
+      return
+    }
 
-  try {
-    const ai = getAiClient()
-    const result = await runAction(ai, payload || {})
-    res.status(200).json({ result })
-  } catch (err) {
-    console.error(`Gemini API error [${action}]:`, err)
-    res.status(500).json({ error: err.message || 'AI 服務暫時發生錯誤，請稍後再試。' })
+    try {
+      const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY.value() })
+      const result = await runAction(ai, payload || {})
+      res.status(200).json({ result })
+    } catch (err) {
+      console.error(`Gemini API error [${action}]:`, err)
+      res.status(500).json({ error: err.message || 'AI 服務暫時發生錯誤，請稍後再試。' })
+    }
   }
-}
+)
