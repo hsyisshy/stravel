@@ -1,8 +1,22 @@
 import { Link } from 'react-router-dom'
+import logoAnimation from '../assets/logo-animation.mp4'
+import logoImage from '../assets/logo.png'
 
 function HomePage() {
   return (
     <div className="mx-auto max-w-3xl space-y-5 py-8 md:py-16">
+      <video
+        className="w-full max-w-md"
+        src={logoAnimation}
+        poster={logoImage}
+        autoPlay
+        muted
+        loop
+        playsInline
+      >
+        <img src={logoImage} alt="遊點易思" className="w-full max-w-md" />
+      </video>
+
       <p className="text-xs font-semibold uppercase tracking-wide text-cyan-700">
         旅遊團務管理平台
       </p>
