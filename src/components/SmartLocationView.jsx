@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Map, Marker, Circle } from '@vis.gl/react-google-maps'
-import { distanceMeters } from '../lib/storage'
+import { distanceMeters, updateMyLocation } from '../lib/storage'
+
+const BROADCAST_INTERVAL_MS = 15000
 
 function dotIcon(color) {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><circle cx="10" cy="10" r="8" fill="${color}" stroke="white" stroke-width="2"/></svg>`
@@ -12,10 +14,11 @@ function dotIcon(color) {
 const meetingIcon = dotIcon('#e11d48')
 const userIcon = dotIcon('#f59e0b')
 
-function SmartLocationView({ group }) {
+function SmartLocationView({ group, participantId }) {
   const hasMeetingPoint = typeof group.meetingLat === 'number' && typeof group.meetingLng === 'number'
   const [position, setPosition] = useState(null)
   const [geoError, setGeoError] = useState('')
+  const lastBroadcastRef = useRef(0)
 
   useEffect(() => {
     if (!navigator.geolocation) {
@@ -26,7 +29,18 @@ function SmartLocationView({ group }) {
     const watchId = navigator.geolocation.watchPosition(
       (pos) => {
         setGeoError('')
-        setPosition({ lat: pos.coords.latitude, lng: pos.coords.longitude })
+        const next = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+        setPosition(next)
+
+        if (participantId) {
+          const now = Date.now()
+          if (now - lastBroadcastRef.current >= BROADCAST_INTERVAL_MS) {
+            lastBroadcastRef.current = now
+            updateMyLocation(group.id, participantId, next).catch(() => {
+              // 位置回報失敗不影響使用者的定位體驗，安靜略過即可
+            })
+          }
+        }
       },
       (err) => {
         setGeoError(err.code === 1 ? '請允許瀏覽器存取您的位置，才能使用智慧定位。' : '目前無法取得您的位置。')
@@ -35,7 +49,7 @@ function SmartLocationView({ group }) {
     )
 
     return () => navigator.geolocation.clearWatch(watchId)
-  }, [])
+  }, [group.id, participantId])
 
   const distance = useMemo(() => {
     if (!hasMeetingPoint || !position) return null

@@ -6,6 +6,7 @@ import {
   addAttendanceEvent,
   addItineraryItem,
   addPhoto,
+  addRecommendation,
   deleteItineraryItem,
   formatDate,
   formatDateTime,
@@ -18,14 +19,18 @@ import {
   updateGroupLocation,
 } from '../lib/storage'
 import LocationPicker from '../components/LocationPicker'
-import { AiItineraryModal, AiAnnouncementModal } from '../components/AdminAiModals'
+import AdminLiveMapView from '../components/AdminLiveMapView'
+import { AiItineraryModal, AiAnnouncementModal, AiTripInsightsModal } from '../components/AdminAiModals'
 
 const tabs = [
   { key: 'travelers', label: '團員名單' },
   { key: 'announcements', label: '公告區' },
   { key: 'itinerary', label: '行程一覽表' },
+  { key: 'insights', label: 'AI 行前評估' },
   { key: 'photos', label: '照片區' },
   { key: 'attendance', label: '點名功能' },
+  { key: 'live-map', label: '即時位置' },
+  { key: 'post-trip', label: '旅程後' },
 ]
 
 function AdminGroupDetailPage() {
@@ -60,6 +65,9 @@ function AdminGroupDetailPage() {
   // AI Modal States
   const [showAiItineraryModal, setShowAiItineraryModal] = useState(false)
   const [showAiAnnouncementModal, setShowAiAnnouncementModal] = useState(false)
+  const [showAiInsightsModal, setShowAiInsightsModal] = useState(false)
+  const [recommendationForm, setRecommendationForm] = useState({ title: '', content: '', linkUrl: '' })
+  const [savingRecommendation, setSavingRecommendation] = useState(false)
 
   useEffect(() => {
     async function loadGroup() {
@@ -224,6 +232,22 @@ function AdminGroupDetailPage() {
       .catch((err) => {
         setSavingError(err.message || '更新點名狀態失敗')
       })
+  }
+
+  async function handleRecommendationSubmit(e) {
+    e.preventDefault()
+    if (!canEdit) return
+    setSavingError('')
+    setSavingRecommendation(true)
+    try {
+      await addRecommendation(groupId, recommendationForm)
+      setRecommendationForm({ title: '', content: '', linkUrl: '' })
+      setRefreshKey((x) => x + 1)
+    } catch (err) {
+      setSavingError(err.message || '推播新行程失敗')
+    } finally {
+      setSavingRecommendation(false)
+    }
   }
 
   async function handleRemoveTraveler(traveler) {
@@ -826,6 +850,204 @@ function AdminGroupDetailPage() {
             </div>
           </div>
         )}
+
+        {/* 6. AI 行前評估 */}
+        {activeTab === 'insights' && (
+          <div className="mt-6 space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-bold text-slate-900">AI 行前風險評估</h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  天氣預測、景點人潮預測、團費成本預估，由 Gemini 結合 Google 搜尋生成。
+                </p>
+              </div>
+              {canEdit && (
+                <button
+                  type="button"
+                  onClick={() => setShowAiInsightsModal(true)}
+                  className="rounded-lg bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-cyan-700"
+                >
+                  {group.insights ? '重新評估' : '開始 AI 評估'}
+                </button>
+              )}
+            </div>
+
+            {!group.insights && (
+              <p className="rounded-xl bg-slate-50 p-4 text-sm text-slate-400">尚未產生評估結果。</p>
+            )}
+
+            {group.insights && (
+              <div className="grid gap-4 lg:grid-cols-3">
+                <div className="rounded-2xl border border-slate-200 p-4">
+                  <h3 className="text-sm font-bold text-slate-900">天氣預測</h3>
+                  <div className="mt-3 space-y-2">
+                    {(group.insights.weather || []).map((w, i) => (
+                      <div key={i} className="rounded-lg bg-slate-50 p-2.5 text-xs">
+                        <p className="font-semibold text-slate-900">
+                          {w.date} · {w.condition}（{w.tempRange}）
+                        </p>
+                        <p className="mt-1 text-slate-600">{w.advice}</p>
+                      </div>
+                    ))}
+                    {(!group.insights.weather || group.insights.weather.length === 0) && (
+                      <p className="text-xs text-slate-400">無天氣資料。</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-slate-200 p-4">
+                  <h3 className="text-sm font-bold text-slate-900">人潮預測</h3>
+                  <div className="mt-3 space-y-2">
+                    {(group.insights.crowd || []).map((c, i) => (
+                      <div key={i} className="rounded-lg bg-slate-50 p-2.5 text-xs">
+                        <p className="font-semibold text-slate-900">
+                          {c.location}（人潮：{c.level}）
+                        </p>
+                        <p className="mt-1 text-slate-600">{c.advice}</p>
+                      </div>
+                    ))}
+                    {(!group.insights.crowd || group.insights.crowd.length === 0) && (
+                      <p className="text-xs text-slate-400">無人潮資料。</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-slate-200 p-4">
+                  <h3 className="text-sm font-bold text-slate-900">成本預估</h3>
+                  {group.insights.cost && (
+                    <>
+                      <p className="mt-2 text-sm font-bold text-cyan-700">
+                        每人約 {group.insights.cost.currency} {group.insights.cost.perPersonLow} -{' '}
+                        {group.insights.cost.perPersonHigh}
+                      </p>
+                      <div className="mt-2 space-y-1.5">
+                        {(group.insights.cost.breakdown || []).map((b, i) => (
+                          <div key={i} className="flex items-center justify-between rounded-lg bg-slate-50 px-2.5 py-1.5 text-xs">
+                            <span className="font-semibold text-slate-800">{b.category}</span>
+                            <span className="text-slate-600">{b.amount}</span>
+                          </div>
+                        ))}
+                      </div>
+                      {group.insights.cost.notes && (
+                        <p className="mt-2 text-xs text-slate-500">{group.insights.cost.notes}</p>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 7. 即時位置 */}
+        {activeTab === 'live-map' && (
+          <div className="mt-6">
+            <h2 className="text-xl font-bold text-slate-900">即時位置監控</h2>
+            <p className="mt-1 text-sm text-slate-500">查看所有團員的即時定位，掌握是否有人脫離安全區域。</p>
+            <div className="mt-4">
+              <AdminLiveMapView group={group} />
+            </div>
+          </div>
+        )}
+
+        {/* 8. 旅程後 */}
+        {activeTab === 'post-trip' && (
+          <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_1.4fr]">
+            <form className="rounded-2xl border border-slate-200 p-6" onSubmit={handleRecommendationSubmit}>
+              <h2 className="text-xl font-bold text-slate-900">推播新行程給家長／團員</h2>
+              <p className="mt-1 text-xs text-slate-500">
+                發布後將顯示在團員與家長的「旅程後」頁面通知列表中。
+              </p>
+
+              <label className="form-label mt-4">
+                標題
+                <input
+                  required
+                  disabled={!canEdit}
+                  className="form-input"
+                  value={recommendationForm.title}
+                  onChange={(e) => setRecommendationForm((prev) => ({ ...prev, title: e.target.value }))}
+                />
+              </label>
+
+              <label className="form-label mt-3">
+                內容
+                <textarea
+                  required
+                  rows={4}
+                  disabled={!canEdit}
+                  className="form-input"
+                  value={recommendationForm.content}
+                  onChange={(e) => setRecommendationForm((prev) => ({ ...prev, content: e.target.value }))}
+                />
+              </label>
+
+              <label className="form-label mt-3">
+                連結（選填）
+                <input
+                  disabled={!canEdit}
+                  className="form-input"
+                  placeholder="例如新行程的加入連結"
+                  value={recommendationForm.linkUrl}
+                  onChange={(e) => setRecommendationForm((prev) => ({ ...prev, linkUrl: e.target.value }))}
+                />
+              </label>
+
+              <button
+                type="submit"
+                disabled={!canEdit || savingRecommendation}
+                className="mt-4 rounded-lg bg-cyan-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {savingRecommendation ? '推播中...' : '推播新行程通知'}
+              </button>
+
+              <div className="mt-6 border-t border-slate-100 pt-4">
+                <h3 className="text-sm font-bold text-slate-900">已推播列表</h3>
+                <div className="mt-2 space-y-2">
+                  {(group.recommendations || []).length === 0 && (
+                    <p className="text-xs text-slate-400">尚未推播任何通知。</p>
+                  )}
+                  {(group.recommendations || []).map((r) => (
+                    <div key={r.id} className="rounded-lg border border-slate-200 p-3 text-xs">
+                      <p className="font-semibold text-slate-900">{r.title}</p>
+                      <p className="mt-1 text-slate-600">{r.content}</p>
+                      <p className="mt-1 text-[10px] text-slate-400">{formatDateTime(r.createdAt)}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </form>
+
+            <div className="rounded-2xl border border-slate-200 p-6">
+              <h2 className="text-xl font-bold text-slate-900">導遊滿意度回饋</h2>
+              {(group.feedback || []).length === 0 ? (
+                <p className="mt-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-400">尚無回饋。</p>
+              ) : (
+                <>
+                  <div className="mt-3 rounded-xl bg-slate-50 p-4">
+                    <p className="text-sm text-slate-500">平均滿意度</p>
+                    <p className="mt-1 text-3xl font-black text-cyan-700">
+                      {(group.feedback.reduce((sum, f) => sum + f.rating, 0) / group.feedback.length).toFixed(1)}
+                      <span className="text-base font-semibold text-slate-400"> / 5（{group.feedback.length} 則）</span>
+                    </p>
+                  </div>
+                  <div className="mt-4 space-y-2">
+                    {group.feedback.map((f) => (
+                      <div key={f.id} className="rounded-lg border border-slate-200 p-3 text-xs">
+                        <p className="font-semibold text-amber-600">
+                          {'★'.repeat(f.rating)}
+                          {'☆'.repeat(5 - f.rating)}
+                        </p>
+                        {f.comment && <p className="mt-1 text-slate-600">{f.comment}</p>}
+                        <p className="mt-1 text-[10px] text-slate-400">{formatDateTime(f.createdAt)}</p>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </section>
 
       {/* AI Modals */}
@@ -841,6 +1063,13 @@ function AdminGroupDetailPage() {
         onClose={() => setShowAiAnnouncementModal(false)}
         group={group}
         onDraftReady={(draft) => setAnnouncementForm(draft)}
+      />
+
+      <AiTripInsightsModal
+        isOpen={showAiInsightsModal}
+        onClose={() => setShowAiInsightsModal(false)}
+        group={group}
+        onSaved={() => setRefreshKey((x) => x + 1)}
       />
     </div>
   )

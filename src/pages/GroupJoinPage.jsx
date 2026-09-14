@@ -8,7 +8,7 @@ function GroupJoinPage() {
   const [group, setGroup] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [form, setForm] = useState({ name: '', phone: '', notes: '' })
+  const [form, setForm] = useState({ name: '', phone: '', notes: '', role: 'traveler', guardianOfId: '' })
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
@@ -52,8 +52,14 @@ function GroupJoinPage() {
     )
   }
 
+  const children = (group.travelers || []).filter((t) => t.role !== 'guardian')
+
   async function handleSubmit(e) {
     e.preventDefault()
+    if (form.role === 'guardian' && !form.guardianOfId) {
+      setError('請選擇您要關注的團員（孩子）。')
+      return
+    }
     setSubmitting(true)
     try {
       const traveler = await addTraveler(groupId, form)
@@ -73,6 +79,59 @@ function GroupJoinPage() {
       {error && <p className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-600">{error}</p>}
 
       <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+        <div>
+          <label className="form-label">我的身份</label>
+          <div className="mt-1.5 grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setForm((prev) => ({ ...prev, role: 'traveler', guardianOfId: '' }))}
+              className={`rounded-xl border px-4 py-2.5 text-sm font-semibold transition ${
+                form.role === 'traveler'
+                  ? 'border-cyan-600 bg-cyan-50 text-cyan-700'
+                  : 'border-slate-200 text-slate-600 hover:border-slate-300'
+              }`}
+            >
+              我是團員（學生）
+            </button>
+            <button
+              type="button"
+              onClick={() => setForm((prev) => ({ ...prev, role: 'guardian' }))}
+              className={`rounded-xl border px-4 py-2.5 text-sm font-semibold transition ${
+                form.role === 'guardian'
+                  ? 'border-cyan-600 bg-cyan-50 text-cyan-700'
+                  : 'border-slate-200 text-slate-600 hover:border-slate-300'
+              }`}
+            >
+              我是家長
+            </button>
+          </div>
+        </div>
+
+        {form.role === 'guardian' && (
+          <label className="form-label">
+            關注哪位團員（孩子）？
+            {children.length === 0 ? (
+              <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+                目前尚無團員加入，請先請孩子完成加入後，再回來選擇。
+              </p>
+            ) : (
+              <select
+                required
+                className="form-input"
+                value={form.guardianOfId}
+                onChange={(e) => setForm((prev) => ({ ...prev, guardianOfId: e.target.value }))}
+              >
+                <option value="">請選擇...</option>
+                {children.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}（{c.phone}）
+                  </option>
+                ))}
+              </select>
+            )}
+          </label>
+        )}
+
         <label className="form-label">
           姓名
           <input
@@ -104,7 +163,7 @@ function GroupJoinPage() {
         </label>
 
         <button
-          disabled={submitting}
+          disabled={submitting || (form.role === 'guardian' && children.length === 0)}
           type="submit"
           className="w-full rounded-xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-cyan-500 disabled:cursor-not-allowed disabled:opacity-60"
         >

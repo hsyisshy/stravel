@@ -9,16 +9,25 @@ import {
   getStoredParticipantId,
 } from '../lib/storage'
 import SmartLocationView from '../components/SmartLocationView'
+import GuardianLocationView from '../components/GuardianLocationView'
 import PhotoGalleryView from '../components/PhotoGalleryView'
 import AiTourGuideView from '../components/AiTourGuideView'
 import RollCallTravelerView from '../components/RollCallTravelerView'
 import AiAssistantDrawer from '../components/AiAssistantDrawer'
+import PostTripView from '../components/PostTripView'
 
-const navItems = [
+const travelerNavItems = [
   { key: 'location', label: '智慧定位', icon: 'pin' },
   { key: 'rollcall', label: '快速點名', icon: 'check' },
   { key: 'guide', label: '景點導覽', icon: 'bulb' },
   { key: 'photos', label: '精彩照片', icon: 'image' },
+  { key: 'post-trip', label: '旅程後', icon: 'flag' },
+]
+
+const guardianNavItems = [
+  { key: 'location', label: '孩子位置', icon: 'pin' },
+  { key: 'photos', label: '精彩照片', icon: 'image' },
+  { key: 'post-trip', label: '旅程後', icon: 'flag' },
 ]
 
 function NavIcon({ name }) {
@@ -49,11 +58,19 @@ function NavIcon({ name }) {
       </svg>
     )
   }
+  if (name === 'image') {
+    return (
+      <svg {...common}>
+        <rect x="3" y="4" width="18" height="16" rx="2" />
+        <circle cx="8.5" cy="10" r="1.5" />
+        <path d="m21 16-5-5-9 9" />
+      </svg>
+    )
+  }
   return (
     <svg {...common}>
-      <rect x="3" y="4" width="18" height="16" rx="2" />
-      <circle cx="8.5" cy="10" r="1.5" />
-      <path d="m21 16-5-5-9 9" />
+      <path d="M5 3v18" />
+      <path d="M5 4h11l-2.5 4L16 12H5" />
     </svg>
   )
 }
@@ -78,6 +95,10 @@ function HeaderLeft({ tab, groupName }) {
 
   if (tab === 'rollcall') {
     return <span className="text-xs font-semibold text-slate-500">快速 GPS 簽到</span>
+  }
+
+  if (tab === 'post-trip') {
+    return <span className="text-xs font-semibold text-slate-500">旅程後回顧</span>
   }
 
   return (
@@ -149,6 +170,10 @@ function GroupPublicPage() {
   }
 
   const participantId = getStoredParticipantId(groupId)
+  const currentParticipant = (group.travelers || []).find((t) => t.id === participantId) || null
+  const role = currentParticipant?.role === 'guardian' ? 'guardian' : 'traveler'
+  const child = role === 'guardian' ? (group.travelers || []).find((t) => t.id === currentParticipant.guardianOfId) || null : null
+  const navItems = role === 'guardian' ? guardianNavItems : travelerNavItems
   const announcements = getAnnouncementFeed(group)
   const itineraryFeed = getItineraryFeed(group)
   const hasUpdates = announcements.length > 0 || itineraryFeed.length > 0
@@ -248,9 +273,12 @@ function GroupPublicPage() {
 
         {/* Tab Contents */}
         <div className="pt-4">
-          {activeTab === 'location' && <SmartLocationView group={group} />}
+          {activeTab === 'location' && role === 'guardian' && <GuardianLocationView group={group} child={child} />}
+          {activeTab === 'location' && role === 'traveler' && (
+            <SmartLocationView group={group} participantId={participantId} />
+          )}
 
-          {activeTab === 'rollcall' && (
+          {activeTab === 'rollcall' && role === 'traveler' && (
             <RollCallTravelerView
               group={group}
               participantId={participantId}
@@ -258,7 +286,7 @@ function GroupPublicPage() {
             />
           )}
 
-          {activeTab === 'guide' && <AiTourGuideView group={group} />}
+          {activeTab === 'guide' && role === 'traveler' && <AiTourGuideView group={group} />}
 
           {activeTab === 'photos' && (
             <PhotoGalleryView
@@ -267,10 +295,15 @@ function GroupPublicPage() {
               onUploaded={() => setRefreshKey((x) => x + 1)}
             />
           )}
+
+          {activeTab === 'post-trip' && <PostTripView group={group} participantId={participantId} role={role} />}
         </div>
 
         {/* Bottom Navigation */}
-        <nav className="mt-4 grid grid-cols-4 gap-1.5 border-t border-slate-100 pt-4">
+        <nav
+          className="mt-4 grid gap-1.5 border-t border-slate-100 pt-4"
+          style={{ gridTemplateColumns: `repeat(${navItems.length}, minmax(0, 1fr))` }}
+        >
           {navItems.map((item) => (
             <button
               key={item.key}

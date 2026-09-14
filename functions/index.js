@@ -272,6 +272,61 @@ ${(itinerary || []).map((i) => `• ${i.date} ${i.title} (${i.location})`).join(
   return parseJsonResponse(response.text, 'AI 回憶錄生成失敗，請重試一次。')
 }
 
+/**
+ * 7. AI 行前風險評估：天氣預測、人潮預測、成本預估 (Google Search Grounding)
+ */
+async function predictTripInsights(ai, { destination, days, departureDate, itinerary, groupNotes }) {
+  const itinerarySummary =
+    (itinerary || []).map((i) => `• ${i.date} ${i.time} - ${i.title} (${i.location})`).join('\n') ||
+    '尚無詳細行程，請依目的地一般狀況評估'
+
+  const prompt = `你是一位資深旅遊風險顧問，擅長天氣、景點人潮與團費成本評估。請針對以下旅遊團，運用你能取得的最新公開資訊，提供行前風險評估。
+
+【團體資訊】
+- 目的地/主軸：${destination}
+- 總天數：${days || 1} 天
+- 出發日期：${departureDate || '未定'}
+- 行程重點：
+${itinerarySummary}
+- 領隊備註：${groupNotes || '無'}
+
+【任務】
+1. 天氣預測：針對出發日期起的每一天，給出天氣狀況、氣溫區間、對應的行程建議或提醒。若日期太遠無法取得精確預報，請依當地當季氣候特徵給出合理估計，並註明是「氣候估計」還是「即時預報」。
+2. 人潮預測：針對行程中的主要景點，評估預期人潮擁擠程度（低/中/高）與建議應對方式（例如提早出發、預約時段）。
+3. 成本預估：依目的地、天數與行程內容，抓出這團大約的每人成本區間（交通、住宿、餐飲、活動門票），並附上簡短說明與幣別。
+
+【輸出要求】
+請只回傳一個嚴格的 JSON 物件，不要包含任何 markdown 標籤、程式碼框線或額外文字說明：
+{
+  "weather": [
+    { "date": "YYYY-MM-DD", "condition": "天氣狀況簡述", "tempRange": "溫度區間，例如 18-24°C", "advice": "行程建議或穿著提醒", "confidence": "即時預報 或 氣候估計" }
+  ],
+  "crowd": [
+    { "location": "景點名稱", "level": "低 / 中 / 高", "advice": "應對建議" }
+  ],
+  "cost": {
+    "currency": "幣別，例如 TWD",
+    "perPersonLow": 數字,
+    "perPersonHigh": 數字,
+    "breakdown": [
+      { "category": "交通 / 住宿 / 餐飲 / 活動門票", "amount": "約略金額或區間文字", "note": "說明" }
+    ],
+    "notes": "整體成本評估補充說明"
+  }
+}`
+
+  const response = await ai.models.generateContent({
+    model: 'gemini-3.6-flash',
+    contents: prompt,
+    config: {
+      temperature: 0.4,
+      tools: [{ googleSearch: {} }],
+    },
+  })
+
+  return parseJsonResponse(response.text, 'AI 行前風險評估解析失敗，請重試一次。')
+}
+
 const actionHandlers = {
   generateItinerary,
   replanItinerary,
@@ -279,6 +334,7 @@ const actionHandlers = {
   narrateLandmark,
   chatTourAssistant,
   generateTravelStory,
+  predictTripInsights,
 }
 
 export const gemini = onRequest(

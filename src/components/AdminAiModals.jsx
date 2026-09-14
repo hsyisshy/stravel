@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { generateItineraryAI, replanItineraryAI, draftAnnouncementAI } from '../lib/gemini'
-import { addMultipleItineraryItems, addAnnouncement } from '../lib/storage'
+import { generateItineraryAI, replanItineraryAI, draftAnnouncementAI, predictTripInsightsAI } from '../lib/gemini'
+import { addMultipleItineraryItems, addAnnouncement, saveTripInsights } from '../lib/storage'
 
 /**
  * 1. AI 行程規劃與動態調程 Modal
@@ -434,6 +434,167 @@ export function AiAnnouncementModal({ isOpen, onClose, group, onDraftReady }) {
               className="w-full rounded-lg bg-slate-900 py-2 text-xs font-semibold text-white hover:bg-slate-700"
             >
               帶入公告發布表單
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+/**
+ * 3. AI 行前風險評估 Modal：天氣預測 / 人潮預測 / 成本預估
+ */
+export function AiTripInsightsModal({ isOpen, onClose, group, onSaved }) {
+  const [loading, setLoading] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+  const [result, setResult] = useState(group?.insights || null)
+
+  if (!isOpen) return null
+
+  async function handleGenerate() {
+    setLoading(true)
+    setError('')
+    try {
+      const data = await predictTripInsightsAI({
+        destination: group?.name,
+        days: group?.itinerary?.length ? new Set(group.itinerary.map((i) => i.date)).size : 1,
+        departureDate: group?.departureDate,
+        itinerary: group?.itinerary || [],
+        groupNotes: group?.notes,
+      })
+      setResult(data)
+    } catch (err) {
+      console.error(err)
+      setError(err.message || 'AI 評估失敗，請重試')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleSave() {
+    if (!result) return
+    setSaving(true)
+    setError('')
+    try {
+      await saveTripInsights(group.id, result)
+      onSaved?.()
+      onClose()
+    } catch (err) {
+      console.error(err)
+      setError(err.message || '儲存評估結果失敗')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-slate-200 bg-white p-6 shadow-lg space-y-4">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div>
+            <h2 className="text-base font-bold text-slate-900">AI 行前風險評估</h2>
+            <p className="text-xs text-slate-400">天氣預測 / 人潮預測 / 成本預估（Gemini + Google 搜尋）</p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+          >
+            ✕
+          </button>
+        </div>
+
+        {error && (
+          <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-xs font-medium text-rose-700">
+            {error}
+          </div>
+        )}
+
+        <button
+          type="button"
+          disabled={loading}
+          onClick={handleGenerate}
+          className="w-full rounded-lg bg-cyan-600 py-2.5 text-xs font-semibold text-white hover:bg-cyan-700 disabled:opacity-50"
+        >
+          {loading ? 'Gemini 正在查詢與評估中...' : result ? '重新評估' : '開始 AI 行前風險評估'}
+        </button>
+
+        {result && (
+          <div className="space-y-4">
+            <div className="rounded-lg border border-slate-200 p-4">
+              <h3 className="text-xs font-bold uppercase tracking-wide text-slate-500">天氣預測</h3>
+              <div className="mt-2 space-y-2">
+                {(result.weather || []).map((w, i) => (
+                  <div key={i} className="rounded-lg bg-slate-50 p-3 text-xs">
+                    <div className="flex flex-wrap items-center justify-between gap-1 font-semibold text-slate-900">
+                      <span>{w.date} · {w.condition}</span>
+                      <span className="text-cyan-700">{w.tempRange}</span>
+                    </div>
+                    <p className="mt-1 text-slate-600">{w.advice}</p>
+                    {w.confidence && <p className="mt-1 text-[10px] text-slate-400">{w.confidence}</p>}
+                  </div>
+                ))}
+                {(!result.weather || result.weather.length === 0) && (
+                  <p className="text-xs text-slate-400">無天氣資料。</p>
+                )}
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-slate-200 p-4">
+              <h3 className="text-xs font-bold uppercase tracking-wide text-slate-500">人潮預測</h3>
+              <div className="mt-2 space-y-2">
+                {(result.crowd || []).map((c, i) => (
+                  <div key={i} className="rounded-lg bg-slate-50 p-3 text-xs">
+                    <div className="flex flex-wrap items-center justify-between gap-1 font-semibold text-slate-900">
+                      <span>{c.location}</span>
+                      <span
+                        className={
+                          c.level === '高'
+                            ? 'text-rose-600'
+                            : c.level === '中'
+                              ? 'text-amber-600'
+                              : 'text-emerald-600'
+                        }
+                      >
+                        人潮：{c.level}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-slate-600">{c.advice}</p>
+                  </div>
+                ))}
+                {(!result.crowd || result.crowd.length === 0) && (
+                  <p className="text-xs text-slate-400">無人潮資料。</p>
+                )}
+              </div>
+            </div>
+
+            {result.cost && (
+              <div className="rounded-lg border border-slate-200 p-4">
+                <h3 className="text-xs font-bold uppercase tracking-wide text-slate-500">成本預估</h3>
+                <p className="mt-2 text-sm font-bold text-slate-900">
+                  每人約 {result.cost.currency} {result.cost.perPersonLow} - {result.cost.perPersonHigh}
+                </p>
+                <div className="mt-2 space-y-1.5">
+                  {(result.cost.breakdown || []).map((b, i) => (
+                    <div key={i} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-xs">
+                      <span className="font-semibold text-slate-800">{b.category}</span>
+                      <span className="text-slate-600">{b.amount}</span>
+                    </div>
+                  ))}
+                </div>
+                {result.cost.notes && <p className="mt-2 text-xs text-slate-500">{result.cost.notes}</p>}
+              </div>
+            )}
+
+            <button
+              type="button"
+              disabled={saving}
+              onClick={handleSave}
+              className="w-full rounded-lg bg-slate-900 py-2.5 text-xs font-semibold text-white hover:bg-slate-700 disabled:opacity-50"
+            >
+              {saving ? '儲存中...' : '儲存評估結果（旅客端將可查看）'}
             </button>
           </div>
         )}

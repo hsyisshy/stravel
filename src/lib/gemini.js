@@ -58,3 +58,10 @@ export async function chatTourAssistantAI(payload) {
 export async function generateTravelStoryAI(payload) {
   return callGeminiApi('generateTravelStory', payload)
 }
+
+/**
+ * 7. AI 行前風險評估：天氣預測、人潮預測、成本預估
+ */
+export async function predictTripInsightsAI(payload) {
+  return callGeminiApi('predictTripInsights', payload)
+}

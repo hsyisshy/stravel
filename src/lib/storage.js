@@ -37,7 +37,47 @@ function toParticipant(id, data = {}) {
     name: data.name || '',
     phone: data.phone || '',
     notes: data.notes || '',
+    role: data.role === 'guardian' ? 'guardian' : 'traveler',
+    guardianOfId: data.guardian_of_id || data.guardianOfId || null,
     joinedAt: data.joined_at?.toDate ? data.joined_at.toDate().toISOString() : (data.joinedAt || new Date().toISOString()),
+  }
+}
+
+function toLiveLocation(id, data = {}) {
+  return {
+    participantId: id,
+    lat: typeof data.lat === 'number' ? data.lat : null,
+    lng: typeof data.lng === 'number' ? data.lng : null,
+    updatedAt: data.updated_at?.toDate ? data.updated_at.toDate().toISOString() : (data.updatedAt || null),
+  }
+}
+
+function toInsights(data = {}) {
+  return {
+    weather: data.weather || [],
+    crowd: data.crowd || [],
+    cost: data.cost || null,
+    generatedAt: data.generated_at?.toDate ? data.generated_at.toDate().toISOString() : (data.generatedAt || null),
+  }
+}
+
+function toRecommendation(id, data = {}) {
+  return {
+    id: id,
+    title: data.title || '',
+    content: data.content || '',
+    linkUrl: data.link_url || data.linkUrl || '',
+    createdAt: data.created_at?.toDate ? data.created_at.toDate().toISOString() : (data.createdAt || new Date().toISOString()),
+  }
+}
+
+function toFeedback(id, data = {}) {
+  return {
+    id: id,
+    participantId: data.participant_id || data.participantId || null,
+    rating: Number(data.rating) || 0,
+    comment: data.comment || '',
+    createdAt: data.created_at?.toDate ? data.created_at.toDate().toISOString() : (data.createdAt || new Date().toISOString()),
   }
 }
 
@@ -128,15 +168,29 @@ export async function getGroupById(groupId) {
 
   if (!groupSnap.exists()) return null
 
-  const [participantsSnap, announcementsSnap, itinerarySnap, photosSnap, eventsSnap, recordsSnap] =
-    await Promise.all([
-      getDocs(query(collection(db, 'groups', groupId, 'participants'), orderBy('joined_at', 'asc'))),
-      getDocs(query(collection(db, 'groups', groupId, 'announcements'), orderBy('published_at', 'desc'))),
-      getDocs(collection(db, 'groups', groupId, 'itinerary')),
-      getDocs(query(collection(db, 'groups', groupId, 'photos'), orderBy('uploaded_at', 'desc'))),
-      getDocs(query(collection(db, 'groups', groupId, 'attendance_events'), orderBy('created_at', 'desc'))),
-      getDocs(collection(db, 'groups', groupId, 'attendance_records')),
-    ])
+  const [
+    participantsSnap,
+    announcementsSnap,
+    itinerarySnap,
+    photosSnap,
+    eventsSnap,
+    recordsSnap,
+    liveLocationsSnap,
+    insightsSnap,
+    recommendationsSnap,
+    feedbackSnap,
+  ] = await Promise.all([
+    getDocs(query(collection(db, 'groups', groupId, 'participants'), orderBy('joined_at', 'asc'))),
+    getDocs(query(collection(db, 'groups', groupId, 'announcements'), orderBy('published_at', 'desc'))),
+    getDocs(collection(db, 'groups', groupId, 'itinerary')),
+    getDocs(query(collection(db, 'groups', groupId, 'photos'), orderBy('uploaded_at', 'desc'))),
+    getDocs(query(collection(db, 'groups', groupId, 'attendance_events'), orderBy('created_at', 'desc'))),
+    getDocs(collection(db, 'groups', groupId, 'attendance_records')),
+    getDocs(collection(db, 'groups', groupId, 'liveLocations')),
+    getDoc(doc(db, 'groups', groupId, 'insights', 'current')),
+    getDocs(query(collection(db, 'groups', groupId, 'recommendations'), orderBy('created_at', 'desc'))),
+    getDocs(query(collection(db, 'groups', groupId, 'feedback'), orderBy('created_at', 'desc'))),
+  ])
 
   const attendanceRecords = recordsSnap.docs.map((d) => d.data())
 
@@ -157,6 +211,11 @@ export async function getGroupById(groupId) {
     }
   })
 
+  const liveLocations = {}
+  liveLocationsSnap.docs.forEach((d) => {
+    liveLocations[d.id] = toLiveLocation(d.id, d.data())
+  })
+
   return {
     ...toCamelGroup(groupSnap.id, groupSnap.data()),
     travelers: participantsSnap.docs.map((d) => toParticipant(d.id, d.data())),
@@ -164,6 +223,10 @@ export async function getGroupById(groupId) {
     itinerary: itinerarySnap.docs.map((d) => toItineraryItem(d.id, d.data())),
     photos: photosSnap.docs.map((d) => toPhoto(d.id, d.data())),
     attendanceEvents: attendanceEventsWithRecords,
+    liveLocations,
+    insights: insightsSnap.exists() ? toInsights(insightsSnap.data()) : null,
+    recommendations: recommendationsSnap.docs.map((d) => toRecommendation(d.id, d.data())),
+    feedback: feedbackSnap.docs.map((d) => toFeedback(d.id, d.data())),
   }
 }
 
@@ -225,6 +288,8 @@ export async function addTraveler(groupId, payload) {
     name: payload.name,
     phone: payload.phone,
     notes: payload.notes || '',
+    role: payload.role === 'guardian' ? 'guardian' : 'traveler',
+    guardian_of_id: payload.role === 'guardian' ? payload.guardianOfId || null : null,
     joined_at: serverTimestamp(),
   }
 
@@ -470,6 +535,80 @@ export async function setAttendanceStatus(groupId, eventId, travelerId, arrived)
   return true
 }
 
+/**
+ * 回報／更新自己目前的即時位置（供導遊、家長查看）
+ */
+export async function updateMyLocation(groupId, participantId, { lat, lng }) {
+  if (!groupId || !participantId) return
+  const locRef = doc(db, 'groups', groupId, 'liveLocations', participantId)
+  await setDoc(
+    locRef,
+    {
+      lat,
+      lng,
+      updated_at: serverTimestamp(),
+    },
+    { merge: true },
+  )
+}
+
+/**
+ * 輕量拉取全團即時位置（供家長／導遊端輪詢刷新，不需重讀整團資料）
+ */
+export async function getLiveLocations(groupId) {
+  const snap = await getDocs(collection(db, 'groups', groupId, 'liveLocations'))
+  const result = {}
+  snap.docs.forEach((d) => {
+    result[d.id] = toLiveLocation(d.id, d.data())
+  })
+  return result
+}
+
+/**
+ * 儲存 AI 天氣／人潮／成本預測結果
+ */
+export async function saveTripInsights(groupId, insights) {
+  const insightsRef = doc(db, 'groups', groupId, 'insights', 'current')
+  await setDoc(insightsRef, {
+    weather: insights.weather || [],
+    crowd: insights.crowd || [],
+    cost: insights.cost || null,
+    generated_at: serverTimestamp(),
+  })
+}
+
+/**
+ * 旅程後：推播新行程推薦給家長／團員
+ */
+export async function addRecommendation(groupId, payload) {
+  const ref = collection(db, 'groups', groupId, 'recommendations')
+  const newDoc = doc(ref)
+  const data = {
+    title: payload.title,
+    content: payload.content,
+    link_url: payload.linkUrl || '',
+    created_at: serverTimestamp(),
+  }
+  await setDoc(newDoc, data)
+  return toRecommendation(newDoc.id, { ...data, created_at: new Date() })
+}
+
+/**
+ * 旅程後：導遊滿意度回饋
+ */
+export async function addFeedback(groupId, payload) {
+  const ref = collection(db, 'groups', groupId, 'feedback')
+  const newDoc = doc(ref)
+  const data = {
+    participant_id: payload.participantId || null,
+    rating: Number(payload.rating) || 0,
+    comment: payload.comment || '',
+    created_at: serverTimestamp(),
+  }
+  await setDoc(newDoc, data)
+  return toFeedback(newDoc.id, { ...data, created_at: new Date() })
+}
+
 export function getAnnouncementFeed(group) {
   const announcements = group?.announcements || []
   return [...announcements].sort((a, b) => {
@@ -509,6 +648,26 @@ export function getStoredParticipantId(groupId) {
 export function storeParticipantId(groupId, participantId) {
   try {
     window.localStorage.setItem(participantStorageKey(groupId), participantId)
+  } catch {
+    // ignore
+  }
+}
+
+function feedbackStorageKey(groupId) {
+  return `stravel:feedback_submitted:${groupId}`
+}
+
+export function hasSubmittedFeedback(groupId) {
+  try {
+    return window.localStorage.getItem(feedbackStorageKey(groupId)) === '1'
+  } catch {
+    return false
+  }
+}
+
+export function markFeedbackSubmitted(groupId) {
+  try {
+    window.localStorage.setItem(feedbackStorageKey(groupId), '1')
   } catch {
     // ignore
   }
