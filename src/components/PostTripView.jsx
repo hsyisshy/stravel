@@ -35,7 +35,7 @@ function GuideFeedbackForm({ group, participantId, onSubmitted }) {
   }
 
   return (
-    <form className="space-y-3 rounded-xl border border-slate-200 bg-white p-4" onSubmit={handleSubmit}>
+    <form className="traveler-glass-card space-y-3" onSubmit={handleSubmit}>
       <h3 className="text-sm font-bold text-slate-900">導遊滿意度回饋</h3>
 
       {error && (
@@ -67,7 +67,7 @@ function GuideFeedbackForm({ group, participantId, onSubmitted }) {
       <button
         type="submit"
         disabled={submitting || !participantId}
-        className="w-full rounded-lg bg-cyan-600 py-2.5 text-xs font-semibold text-white hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-50"
+        className="traveler-accent-btn w-full py-2.5"
       >
         {submitting ? '送出中...' : '送出回饋'}
       </button>
@@ -79,7 +79,7 @@ function RecommendationsFeed({ group }) {
   const recommendations = group.recommendations || []
 
   return (
-    <div className="space-y-3 rounded-xl border border-slate-200 bg-white p-4">
+    <div className="traveler-glass-card space-y-3">
       <h3 className="text-sm font-bold text-slate-900">新行程通知</h3>
       {recommendations.length === 0 ? (
         <p className="rounded-lg bg-slate-50 p-3 text-xs text-slate-400">目前沒有新行程通知。</p>
@@ -111,7 +111,7 @@ function RecommendationsFeed({ group }) {
 function PostTripView({ group, participantId, role }) {
   return (
     <div className="space-y-4">
-      <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+      <div className="traveler-glass-card">
         <h2 className="text-sm font-bold text-slate-900">旅程後</h2>
         <p className="mt-0.5 text-xs text-slate-500">回顧這趟旅程的精彩瞬間，並留下您的回饋。</p>
       </div>

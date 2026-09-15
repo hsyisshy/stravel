@@ -40,7 +40,7 @@ function GuardianLocationView({ group, child }) {
 
   if (!child) {
     return (
-      <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-700">
+      <div className="traveler-glass-card border border-amber-300/60 text-sm text-amber-700">
         找不到您關注的團員資料，請聯繫導遊確認。
       </div>
     )
@@ -63,7 +63,7 @@ function GuardianLocationView({ group, child }) {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+      <div className="traveler-glass-card">
         <h2 className="text-sm font-bold text-slate-900">{child.name} 的即時位置</h2>
         <p className="mt-0.5 text-xs text-slate-500">
           {hasChildPosition ? `最後更新：${formatDateTime(childLocation.updatedAt)}` : '尚未取得孩子的位置回報，孩子的裝置需開啟「智慧定位」頁面才會持續回報。'}
@@ -71,25 +71,25 @@ function GuardianLocationView({ group, child }) {
       </div>
 
       {!hasMeetingPoint && (
-        <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-700">
+        <div className="traveler-glass-card border border-amber-300/60 text-sm text-amber-700">
           導遊尚未設定集合地點座標，暫無法顯示安全範圍提醒。
         </div>
       )}
 
       {hasMeetingPoint && distance !== null && (
         <div
-          className={`rounded-xl p-4 text-sm font-bold ${
-            isOutside ? 'border border-rose-300 bg-rose-50 text-rose-700' : 'border border-emerald-300 bg-emerald-50 text-emerald-700'
+          className={`traveler-glass-card text-sm font-bold ${
+            isOutside ? 'text-rose-700' : 'text-emerald-700'
           }`}
         >
           {isOutside ? `${child.name} 已脫離安全區域` : `${child.name} 在安全區域內`}
-          <span className="ml-2 font-normal">
+          <span className="ml-2 font-normal text-slate-600">
             距離集合地點約 {distance >= 1000 ? `${(distance / 1000).toFixed(1)} 公里` : `${Math.round(distance)} 公尺`}
           </span>
         </div>
       )}
 
-      <div className="overflow-hidden rounded-2xl border border-slate-200">
+      <div className="overflow-hidden rounded-2xl">
         <Map style={{ height: 320, width: '100%' }} defaultCenter={mapCenter} defaultZoom={hasMeetingPoint || hasChildPosition ? 16 : 13} gestureHandling="greedy">
           {meetingPoint && (
             <>
@@ -101,7 +101,7 @@ function GuardianLocationView({ group, child }) {
         </Map>
       </div>
 
-      <div className="flex items-center gap-4 text-xs text-slate-500">
+      <div className="flex items-center justify-center gap-6 text-xs font-medium text-slate-700">
         <span className="flex items-center gap-1.5">
           <span className="h-2.5 w-2.5 rounded-full bg-cyan-600" /> {child.name}
         </span>

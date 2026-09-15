@@ -67,7 +67,7 @@ function PhotoGalleryView({ group, participantId, onUploaded }) {
   return (
     <div className="space-y-4">
       {/* AI Memory Generator Card */}
-      <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+      <div className="traveler-glass-card space-y-3">
         <div className="flex items-center justify-between gap-3">
           <div>
             <span className="inline-block rounded border border-cyan-200 bg-white px-2 py-0.5 text-[11px] font-semibold text-cyan-700">
@@ -82,7 +82,7 @@ function PhotoGalleryView({ group, participantId, onUploaded }) {
             type="button"
             disabled={isGeneratingStory}
             onClick={handleGenerateStory}
-            className="shrink-0 rounded-lg bg-cyan-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-cyan-700 disabled:opacity-50"
+            className="traveler-accent-btn shrink-0 px-3.5 py-2 text-xs"
           >
             {isGeneratingStory ? '生成中...' : '一鍵生成'}
           </button>
@@ -107,12 +107,12 @@ function PhotoGalleryView({ group, participantId, onUploaded }) {
         </div>
       </div>
 
-      <div className="flex gap-2 border-b border-slate-200">
+      <div className="flex gap-1 rounded-full bg-white/50 p-1">
         <button
           type="button"
           onClick={() => setTab('shared')}
-          className={`px-3 py-2 text-sm font-semibold transition ${
-            tab === 'shared' ? 'border-b-2 border-cyan-600 text-slate-900' : 'text-slate-500 hover:text-slate-900'
+          className={`flex-1 rounded-full px-3 py-2 text-sm font-semibold transition ${
+            tab === 'shared' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-700 hover:text-slate-900'
           }`}
         >
           團體共享 ({photos.length})
@@ -120,8 +120,8 @@ function PhotoGalleryView({ group, participantId, onUploaded }) {
         <button
           type="button"
           onClick={() => setTab('mine')}
-          className={`px-3 py-2 text-sm font-semibold transition ${
-            tab === 'mine' ? 'border-b-2 border-cyan-600 text-slate-900' : 'text-slate-500 hover:text-slate-900'
+          className={`flex-1 rounded-full px-3 py-2 text-sm font-semibold transition ${
+            tab === 'mine' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-700 hover:text-slate-900'
           }`}
         >
           我的照片
@@ -129,25 +129,25 @@ function PhotoGalleryView({ group, participantId, onUploaded }) {
       </div>
 
       {tab === 'mine' && !participantId && (
-        <p className="rounded-lg bg-slate-50 p-4 text-sm text-slate-500">
+        <p className="traveler-glass-card text-sm text-slate-500">
           請先加入團體，才能查看與上傳「我的照片」。
         </p>
       )}
 
       {uploadError && (
-        <p className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-xs font-medium text-rose-700">
+        <p className="rounded-2xl border border-rose-200 bg-rose-50/95 p-3 text-xs font-medium text-rose-700">
           {uploadError}
         </p>
       )}
 
       <div className="grid grid-cols-3 gap-2">
         {visiblePhotos.length === 0 && (tab === 'shared' || participantId) && (
-          <p className="col-span-3 rounded-lg bg-slate-50 p-6 text-center text-xs text-slate-400">
+          <p className="traveler-glass-card col-span-3 text-center text-xs text-slate-400">
             目前沒有照片，快成為第一個上傳回憶的人吧。
           </p>
         )}
         {visiblePhotos.map((photo) => (
-          <div key={photo.id} className="group relative aspect-square overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
+          <div key={photo.id} className="group relative aspect-square overflow-hidden rounded-lg border border-white/40 bg-slate-100">
             <img
               src={photo.image}
               alt={photo.title}
@@ -158,11 +158,11 @@ function PhotoGalleryView({ group, participantId, onUploaded }) {
         ))}
       </div>
 
-      <div className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 p-3">
-        <span className="text-xs font-semibold text-slate-700">與全團共享旅程照片</span>
+      <div className="flex items-center justify-between gap-3 rounded-2xl bg-white/50 p-3">
+        <span className="text-xs font-semibold text-slate-800">與全團共享旅程照片</span>
         <label
-          className={`rounded-lg px-4 py-2.5 text-xs font-semibold text-white ${
-            participantId ? 'cursor-pointer bg-cyan-600 hover:bg-cyan-700' : 'cursor-not-allowed bg-slate-300'
+          className={`rounded-full px-4 py-2.5 text-xs font-semibold ${
+            participantId ? 'traveler-accent-btn cursor-pointer' : 'cursor-not-allowed bg-slate-300 text-white'
           }`}
         >
           {uploading ? '上傳中...' : '一鍵同步上傳'}

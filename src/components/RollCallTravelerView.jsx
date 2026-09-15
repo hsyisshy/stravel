@@ -74,7 +74,7 @@ export default function RollCallTravelerView({ group, participantId, onRefresh }
   return (
     <div className="space-y-4">
       {/* Banner */}
-      <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+      <div className="traveler-glass-card">
         <h2 className="text-sm font-bold text-slate-900">團員即時簽到回報</h2>
         <p className="mt-0.5 text-xs text-slate-500">
           導遊發起點名時，團員可在此一鍵回報抵達狀態，避免團體延誤。
@@ -82,19 +82,19 @@ export default function RollCallTravelerView({ group, participantId, onRefresh }
       </div>
 
       {statusMsg && (
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs font-semibold text-emerald-700">
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50/95 p-3 text-xs font-semibold text-emerald-700">
           {statusMsg}
         </div>
       )}
 
       {errorMsg && (
-        <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-xs font-semibold text-rose-700">
+        <div className="rounded-2xl border border-rose-200 bg-rose-50/95 p-3 text-xs font-semibold text-rose-700">
           {errorMsg}
         </div>
       )}
 
       {events.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white p-8 text-center">
+        <div className="traveler-glass-card flex flex-col items-center justify-center gap-2 p-8 text-center">
           <p className="text-sm font-semibold text-slate-700">目前尚無進行中的點名活動</p>
           <p className="text-xs text-slate-400">當導遊發起點名時，這裡將會自動出現簽到按鈕。</p>
         </div>
@@ -108,7 +108,7 @@ export default function RollCallTravelerView({ group, participantId, onRefresh }
             return (
               <div
                 key={event.id}
-                className="space-y-3 rounded-xl border border-slate-200 bg-white p-4"
+                className="traveler-glass-card space-y-3"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div>
@@ -145,7 +145,7 @@ export default function RollCallTravelerView({ group, participantId, onRefresh }
                       type="button"
                       disabled={submittingId === event.id}
                       onClick={() => handleCheckIn(event)}
-                      className="w-full rounded-lg bg-cyan-600 py-3 text-xs font-semibold text-white hover:bg-cyan-700 disabled:opacity-50"
+                      className="traveler-accent-btn w-full py-3"
                     >
                       {submittingId === event.id ? '定位打卡中...' : '我已抵達，點此立即 GPS 簽到'}
                     </button>

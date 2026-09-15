@@ -52,10 +52,33 @@ function AdminLiveMapView({ group }) {
     return { traveler, loc, hasPosition, distance, isOutside }
   })
 
+  const insideCount = rows.filter((r) => r.hasPosition && !r.isOutside).length
+  const outsideCount = rows.filter((r) => r.hasPosition && r.isOutside).length
+  const noReportCount = rows.filter((r) => !r.hasPosition).length
+
   return (
     <div className="space-y-4">
       <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-xs text-slate-500">
         團員需開啟旅客端「智慧定位」頁面，才會持續回報位置（每約 15 秒更新一次）。此頁面每 10 秒自動刷新。
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="rounded-xl border border-slate-200 p-3.5">
+          <p className="text-xs font-semibold text-slate-500">團員總數</p>
+          <p className="mt-1 text-2xl font-black text-slate-900">{rows.length}</p>
+        </div>
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3.5">
+          <p className="text-xs font-semibold text-emerald-700">安全區域內</p>
+          <p className="mt-1 text-2xl font-black text-emerald-700">{insideCount}</p>
+        </div>
+        <div className="rounded-xl border border-rose-200 bg-rose-50 p-3.5">
+          <p className="text-xs font-semibold text-rose-700">已脫離範圍</p>
+          <p className="mt-1 text-2xl font-black text-rose-700">{outsideCount}</p>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-slate-50 p-3.5">
+          <p className="text-xs font-semibold text-slate-500">尚無回報</p>
+          <p className="mt-1 text-2xl font-black text-slate-500">{noReportCount}</p>
+        </div>
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-slate-200">

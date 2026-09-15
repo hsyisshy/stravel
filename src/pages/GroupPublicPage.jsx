@@ -84,28 +84,41 @@ function BellIcon() {
   )
 }
 
-function HeaderLeft({ tab, groupName }) {
+function BackChevronIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+      <path d="m15 18-6-6 6-6" />
+    </svg>
+  )
+}
+
+function HeaderLeft({ tab, groupName, onBack }) {
   if (tab === 'photos') {
-    return <span className="text-sm font-semibold text-slate-900">{groupName}</span>
+    return (
+      <button type="button" onClick={onBack} className="flex items-center gap-1.5 text-sm font-semibold text-white">
+        <BackChevronIcon />
+        <span className="drop-shadow-sm">{groupName}</span>
+      </button>
+    )
   }
 
   if (tab === 'guide') {
-    return <span className="text-xs font-semibold text-slate-500">Gemini 多模態語音導覽</span>
+    return <span className="text-xs font-semibold text-white/90 drop-shadow-sm">Gemini 多模態語音導覽</span>
   }
 
   if (tab === 'rollcall') {
-    return <span className="text-xs font-semibold text-slate-500">快速 GPS 簽到</span>
+    return <span className="text-xs font-semibold text-white/90 drop-shadow-sm">快速 GPS 簽到</span>
   }
 
   if (tab === 'post-trip') {
-    return <span className="text-xs font-semibold text-slate-500">旅程後回顧</span>
+    return <span className="text-xs font-semibold text-white/90 drop-shadow-sm">旅程後回顧</span>
   }
 
   return (
-    <span className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
+    <span className="flex items-center gap-1.5 text-xs font-medium text-white/90 drop-shadow-sm">
       <span className="relative flex h-2 w-2">
-        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75" />
-        <span className="relative inline-flex h-2 w-2 rounded-full bg-cyan-500" />
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-300 opacity-75" />
+        <span className="relative inline-flex h-2 w-2 rounded-full bg-cyan-300" />
       </span>
       系統正持續追蹤定位中
     </span>
@@ -180,14 +193,14 @@ function GroupPublicPage() {
 
   return (
     <div className="mx-auto w-full max-w-xl space-y-4 pb-16">
-      <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="relative flex items-center justify-between border-b border-slate-100 pb-4">
-          <HeaderLeft tab={activeTab} groupName={group.name} />
+      <section className="traveler-shell">
+        <div className="relative flex items-center justify-between pb-4">
+          <HeaderLeft tab={activeTab} groupName={group.name} onBack={() => setActiveTab('location')} />
 
           <button
             type="button"
             onClick={() => setShowInfoPanel((v) => !v)}
-            className="relative rounded-full border border-slate-200 p-2 text-slate-600 hover:bg-slate-50"
+            className="traveler-icon-btn"
             aria-label="公告與行程"
           >
             <BellIcon />
@@ -197,7 +210,7 @@ function GroupPublicPage() {
           </button>
 
           {showInfoPanel && (
-            <div className="absolute right-0 top-full z-30 mt-2 max-h-96 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white p-4 shadow-lg">
+            <div className="absolute right-0 top-full z-30 mt-2 max-h-96 w-full overflow-y-auto rounded-2xl bg-white p-4 shadow-lg">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-bold text-slate-900">公告與行程</h2>
                 <button
@@ -272,7 +285,7 @@ function GroupPublicPage() {
         </div>
 
         {/* Tab Contents */}
-        <div className="pt-4">
+        <div className="space-y-4">
           {activeTab === 'location' && role === 'guardian' && <GuardianLocationView group={group} child={child} />}
           {activeTab === 'location' && role === 'traveler' && (
             <SmartLocationView group={group} participantId={participantId} />
@@ -300,10 +313,7 @@ function GroupPublicPage() {
         </div>
 
         {/* Bottom Navigation */}
-        <nav
-          className="mt-4 grid gap-1.5 border-t border-slate-100 pt-4"
-          style={{ gridTemplateColumns: `repeat(${navItems.length}, minmax(0, 1fr))` }}
-        >
+        <nav className="mt-5 flex flex-col gap-2.5">
           {navItems.map((item) => (
             <button
               key={item.key}
@@ -312,10 +322,8 @@ function GroupPublicPage() {
                 setActiveTab(item.key)
                 setShowInfoPanel(false)
               }}
-              className={`flex flex-col items-center gap-1 rounded-lg px-2 py-2.5 text-xs font-semibold transition ${
-                activeTab === item.key
-                  ? 'bg-cyan-50 text-cyan-700'
-                  : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+              className={`traveler-pill-btn ${
+                activeTab === item.key ? 'traveler-pill-btn-active' : 'traveler-pill-btn-inactive'
               }`}
             >
               <NavIcon name={item.icon} />

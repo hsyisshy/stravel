@@ -65,31 +65,31 @@ function SmartLocationView({ group, participantId }) {
   return (
     <div className="space-y-4">
       {!hasMeetingPoint && (
-        <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-700">
+        <div className="traveler-glass-card border border-amber-300/60 text-sm text-amber-700">
           尚未設定集合地點座標，請聯繫導遊或管理員於後台設定，才能顯示安全範圍提醒。
         </div>
       )}
 
       {geoError && (
-        <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+        <div className="traveler-glass-card border border-rose-200/60 text-sm text-rose-700">
           {geoError}
         </div>
       )}
 
       {hasMeetingPoint && distance !== null && (
         <div
-          className={`rounded-xl p-4 text-sm font-bold ${
-            isOutside ? 'border border-rose-300 bg-rose-50 text-rose-700' : 'border border-emerald-300 bg-emerald-50 text-emerald-700'
+          className={`traveler-glass-card text-sm font-bold ${
+            isOutside ? 'text-rose-700' : 'text-emerald-700'
           }`}
         >
           {isOutside ? '您已脫離安全區域' : '您在安全區域內'}
-          <span className="ml-2 font-normal">
+          <span className="ml-2 font-normal text-slate-600">
             距離集合地點約 {distance >= 1000 ? `${(distance / 1000).toFixed(1)} 公里` : `${Math.round(distance)} 公尺`}
           </span>
         </div>
       )}
 
-      <div className="overflow-hidden rounded-2xl border border-slate-200">
+      <div className="overflow-hidden rounded-2xl">
         <Map style={{ height: 320, width: '100%' }} defaultCenter={mapCenter} defaultZoom={hasMeetingPoint ? 16 : 13} gestureHandling="greedy">
           {meetingPoint && (
             <>
@@ -101,12 +101,12 @@ function SmartLocationView({ group, participantId }) {
         </Map>
       </div>
 
-      <div className="flex items-center gap-4 text-xs text-slate-500">
+      <div className="flex items-center justify-center gap-6 text-xs font-medium text-slate-700">
         <span className="flex items-center gap-1.5">
           <span className="h-2.5 w-2.5 rounded-full bg-amber-500" /> 您的位置
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-full bg-rose-600" /> 集合地點
+          <span className="h-2.5 w-2.5 rounded-full bg-rose-600" /> 導遊位置
         </span>
       </div>
     </div>
